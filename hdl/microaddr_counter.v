@@ -1,4 +1,4 @@
-module microaddr_counter(
+/*module microaddr_counter(
 	input logic clk,
 	input logic reset,
 	input microaddr::cmd cmd,
@@ -29,3 +29,4 @@ always_ff @(posedge clk) begin
 end // always_ff
 
 endmodule // microaddr_counter
+*/

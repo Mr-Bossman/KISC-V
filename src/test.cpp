@@ -4,59 +4,39 @@
 #define SUFF(x) CONCAT(x,_)
 #define PREFIX(x) CAT(SUFF(VPREFIX),x)
 
-struct TestCase {
-	const char* name;
-  uint8_t reset;
-	uint8_t cmd;
- 	uint16_t load_addr;
- 	uint16_t expected_addr;
-};
-
-TestCase test_cases[] {
-	{ "reset", 1, PREFIX(microaddr)::cmd::NONE, 0, 0 },
-	{ "inc", 0, PREFIX(microaddr)::cmd::INC, 0, 1 },
-  { "none", 0, PREFIX(microaddr)::cmd::NONE, 0, 1 },
-  { "reset2", 1, PREFIX(microaddr)::cmd::NONE, 0, 0 },
-	{ "load", 0, PREFIX(microaddr)::cmd::LOAD, 0xFA, 0xFA},
-	{ "inc", 0, PREFIX(microaddr)::cmd::INC, 0, 0xFB},
-  { "reset3", 1, PREFIX(microaddr)::cmd::NONE, 0, 0 },
-};
+#include <iostream>
 
 int main(int argc, char **argv, char **env) {
-  Verilated::commandArgs(argc, argv);
-  VPREFIX* counter = new VPREFIX;
-  
-  counter->clk = 0;
-  counter->reset = 0;
-  counter->cmd = PREFIX(microaddr)::cmd::NONE;
-  counter->load_addr = 0;
-  counter->eval();
+	Verilated::commandArgs(argc, argv);
+	VPREFIX* sim = new VPREFIX;
+	size_t totram = sizeof(sim->prog_counter__DOT__ram__DOT__mem)/sizeof(sim->prog_counter__DOT__ram__DOT__mem[0]);
+	sim->prog_counter__DOT__ram__DOT__mem[0] = 3 | (10<< 20) | (0<<15) | (1 << 7) | (2<<12);
+	sim->prog_counter__DOT__ram__DOT__mem[1] = 3 | (11<< 20) | (0<<15) | (2 << 7) | (2<<12);
+	sim->prog_counter__DOT__ram__DOT__mem[3] = 35 |(2 << 20)| (0<<15) | (15<< 7) | (2<<12);
+	sim->prog_counter__DOT__ram__DOT__mem[4] = 35 |(1 << 20)| (0<<15) | (15<< 7) | (0<<12);
+	sim->prog_counter__DOT__ram__DOT__mem[10] = 0x55555555;
+	sim->prog_counter__DOT__ram__DOT__mem[11] = 0x66666666;
 
-  // while (!Verilated::gotFinish()) { 
-  int num_test_cases = sizeof(test_cases)/sizeof(TestCase);
 
-  for(int k = 0; k < num_test_cases; k++) {
-    TestCase *test_case = &test_cases[k];
+	sim->rts = 1;
+	sim->eval();
+	sim->rts = 0;
+	for(int i = 0; i < 10;i++){
+		printf("addr: %d, data: %0x,%0x\n",sim->prc,sim->odat,sim->prog_counter__DOT__dsize);
+		sim->clk = 0;
+		sim->eval();
+		sim->clk = 1;
+		sim->eval();
+	}
 
-  	counter->cmd = test_case->cmd;
-    counter->reset = test_case->reset;
-  	counter->load_addr = test_case->load_addr;  	
-    counter->eval();
+	for(int i = 0; i < 20;i++){
+		printf("ram %d: 0x%0x\n",i,sim->prog_counter__DOT__ram__DOT__mem[i]);
+	}
+	for(int i = 0; i < 32;i++){
+		printf("reg %d: 0x%0x\n",i,sim->prog_counter__DOT__regs[i]);
+	}
 
-    counter->clk = 1;
-    counter->eval();
-    counter->clk = 0;
-    counter->eval();
-
-    if (counter->addr == test_case->expected_addr) {
-    	printf("%s: passed\n", test_case->name);
-    } else {
-    	printf("%s: fail (expected %04X but was %04X)\n",
-    		test_case->name, test_case->expected_addr,
-    		counter->addr);
-    }
-  }
-  counter->final();
-  delete counter;
-  exit(0);
+	sim->final();
+	delete sim;
+	return 0;
 }
