@@ -20,7 +20,7 @@ module prog_counter
 	reg [31:0] regs[32];
 	reg [31:0] instruction;
 	reg [1:0] microop = 0;
-	reg [1:0] dsize = 3;
+	reg [3:0] dsize = 3;
 	wire [31:0] data;
 	wire [31:0] addr;
 	wire [31:0] alu_out;
@@ -41,6 +41,7 @@ module prog_counter
 	wire [4:0] mo_rs2 = instruction[24:20];
 	wire [31:0] mo_imm_s = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
 	wire [31:0] mo_imm_i = {{21{instruction[31]}}, instruction[30:20]};
+	wire [4:0] mo_rd = instruction[11:7];
 
 	wire [6:0] op = data[6:0];
 	wire [4:0] rs1 = data[19:15];
@@ -58,17 +59,27 @@ module prog_counter
 		else if(clk) begin
 			if(microop == 0) begin
 				opc <= pc;
-				pc <= pc + 1;
+				pc <= pc + 4;
 				instruction <= data;
 				case (op)
 					7'b0000011: begin // LOAD
 						microop <= 1;
-						dsize <= (sub_op==2)?3:sub_op;
+						unique case (sub_op)
+							2'b00: dsize <= 4'b0001;
+							2'b01: dsize <= 4'b0011;
+							2'b10: dsize <= 4'b1111;
+							default: dsize <= 4'b1111;
+						endcase
 					end
 					7'b0100011: begin // STORE
 						rwr <= 0;
 						microop <= 2;
-						dsize <= (sub_op==2)?3:sub_op;
+						unique case (sub_op)
+							2'b00: dsize <= 4'b0001;
+							2'b01: dsize <= 4'b0011;
+							2'b10: dsize <= 4'b1111;
+							default: dsize <= 4'b1111;
+						endcase
 					end
 					7'b0010011: begin // ALUI
 						regs[rd] <= alu_out;
@@ -80,16 +91,20 @@ module prog_counter
 						regs[rd] <= imm_u;
 					end
 					7'b0010111: begin // AUIPC
-						regs[rd] <= imm_u + (pc-1); // fixme
+						regs[rd] <= imm_u + pc;
 					end
 					7'b1100111: begin // JALR
 						pc <= {imm_i + regs[rs1][31:1], 1'b0}; // fixme
 						regs[rd] <=  {imm_i + regs[rs1][31:1], 1'b0} + 4;
 					end
+					7'b1101111: begin // JAL
+						pc <= imm_j + pc + 4; // fixme
+						regs[rd] <=  pc + 4;
+					end
 					default:;
 				endcase
 			end else if (microop == 1) begin
-				regs[rd] <= data;
+				regs[mo_rd] <= data;
 				microop <= 0;
 				dsize <= 3;
 			end else if (microop == 2) begin

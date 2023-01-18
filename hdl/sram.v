@@ -19,8 +19,13 @@ initial begin
 	//$writememb("memory_binary.bin", mem);
 end
 always @(posedge wr) begin
-	if(!cs)
-		mem[addr] <= (data&((1<<((size+1)*8))-1)) | (mem[addr]&(~((1<<((size+1)*8))-1)));
+	if(!cs) begin
+		integer i;
+		for( i = 0; i <= (ADDR_WIDTH/8)-1;i = i + 1) begin
+			if(size[i])
+				mem[addr/4][8*i+:8] <= data[8*i+:8];
+		end
+	end
 end
-assign data = (oe||cs||(!wr))?'hz:(mem[addr]&((1<<((size+1)*8))-1));
+assign data = (oe||cs||(!wr))?'hz:(mem[addr/4]&((1<<((size+1)*8))-1));
 endmodule

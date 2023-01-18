@@ -5,7 +5,7 @@ CXX = g++
 CPPFLAGS = -DVPREFIX=${PREFIX_NAME} -Og
 LDFLAGS =
 CPP_SOURCES = src/test.cpp
-V_SOURCES = hdl/microaddr.v hdl/microaddr_counter.v hdl/sram.v hdl/prog_counter.v hdl/alu.v
+V_SOURCES = hdl/sram.v hdl/prog_counter.v hdl/alu.v
 INCV_SOURCES = hdl/microaddr.v
 INCLUDES = $(addprefix --include ${PREFIX_NAME}_,$(notdir $(INCV_SOURCES:.v=.h))) -include ${PREFIX_NAME}.h
 CPPFLAGS += ${INCLUDES}
