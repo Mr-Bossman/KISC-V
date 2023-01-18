@@ -11,14 +11,14 @@ INCLUDES = $(addprefix --include ${PREFIX_NAME}_,$(notdir $(INCV_SOURCES:.v=.h))
 CPPFLAGS += ${INCLUDES}
 
 
-all : clean_exe ${PREFIX_NAME}
+all: ${PREFIX_NAME}
 
-${PREFIX_NAME} :
+${PREFIX_NAME} : ${V_SOURCES}
 	verilator -Wall --Mdir ${BUILD_DIR} -cc ${V_SOURCES} -prefix ${PREFIX_NAME} -CFLAGS "${CPPFLAGS}" ${CPP_SOURCES} --exe --top-module prog_counter
 	$(MAKE) -C ${BUILD_DIR} -f ${PREFIX_NAME}.mk ${PREFIX_NAME}
 	cp ${BUILD_DIR}/${PREFIX_NAME} .
 
-run: clean_exe ${PREFIX_NAME}
+run: ${PREFIX_NAME}
 	./${PREFIX_NAME}
 
 clean_exe:

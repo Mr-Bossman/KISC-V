@@ -14,7 +14,7 @@ int main(int argc, char **argv, char **env) {
 	sim->prog_counter__DOT__ram__DOT__mem[0] = 3 | ((10*4)<< 20) | (0<<15) | (1 << 7) | (2<<12);
 	sim->prog_counter__DOT__ram__DOT__mem[1] = 3 | ((11*4)<< 20) | (0<<15) | (2 << 7) | (2<<12);
 	sim->prog_counter__DOT__ram__DOT__mem[2] = 35 |(2 << 20)| (0<<15) | ((tmp&0x1f) << 7) | (2<<12) | ((tmp>>5) << 25);
-	sim->prog_counter__DOT__ram__DOT__mem[3] = 35 |(1 << 20)| (0<<15) | ((tmp&0x1f) << 7) | (0<<12) | ((tmp>>5) << 25);
+	sim->prog_counter__DOT__ram__DOT__mem[3] = 35 |(1 << 20)| (0<<15) | ((tmp&0x1f) << 7) | (1<<12) | ((tmp>>5) << 25);
 	sim->prog_counter__DOT__ram__DOT__mem[4] = 0b0010111 | (4<< 7) | (0x2644<<16);
 	sim->prog_counter__DOT__ram__DOT__mem[5] = 0b1101111 | (5<< 7);
 	sim->prog_counter__DOT__ram__DOT__mem[10] = 0x44444444;

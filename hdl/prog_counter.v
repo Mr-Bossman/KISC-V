@@ -106,10 +106,10 @@ module prog_counter
 			end else if (microop == 1) begin
 				regs[mo_rd] <= data;
 				microop <= 0;
-				dsize <= 3;
+				dsize <= 4'b1111;
 			end else if (microop == 2) begin
 				microop <= 0;
-				dsize <= 3;
+				dsize <= 4'b1111;
 			end
 		end else begin
 			rwr <= 1;
