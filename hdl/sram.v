@@ -16,7 +16,8 @@ module sram
 //reg [DATA_WIDTH-1:0] Oreg;
 reg [DATA_WIDTH-1:0] mem[0:RAM_SIZE-1];
 initial begin
-	//$writememb("memory_binary.bin", mem);
+	$readmemh("test.vh", mem);
+	//$monitor("%08h %b %b %b", data, wr, oe, cs);
 end
 always @(posedge wr) begin
 	if(!cs) begin
