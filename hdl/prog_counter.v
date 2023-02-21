@@ -4,12 +4,6 @@
 /* TODO
 JAL
 JALR
-BEQ
-BNE
-BLT
-BGE
-BLTU
-BGEU
 LBU
 LHU
 */
@@ -41,23 +35,19 @@ module prog_counter
 	reg [31:0] data;
 	wire [31:0] odata;
 	reg [31:0] addr;
-	wire [31:0] alu_out;
 
-	reg wr = 0;
-	wire APB_en;
-	wire APB_sel;
+	wire [31:0] alu_out;
+	wire cmp_flag;
+
 	wire APB_ready;
-	wire APB_wr;
 	wire APB_err;
-	wire load_insr;
-	wire mem_access;
-	wire store_alu;
-	assign APB_sel = microop[0];
-	assign APB_en = microop[1];
-	assign APB_wr = (op == 7'b0100011);
-	assign load_insr = microop[3];
-	assign mem_access = microop[4];
-	assign store_alu = microop[2];
+	wire APB_sel = microop[0];
+	wire APB_en = microop[1];
+	wire APB_wr = (op == 7'b0100011);
+	wire store_alu = microop[2];
+	wire load_insr = microop[3];
+	wire mem_access = microop[4];
+	wire alu_flags = microop[5];
 
 initial begin
 	$readmemh("microop.vh", microop_prog);
@@ -74,7 +64,7 @@ end
 
 
 	assign odat = microop;
-	assign res = {2'b0,pc[31:2]};
+	assign res = pc;
 
 
 
@@ -84,11 +74,12 @@ end
 	wire [6:0] op = instruction[6:0];
 	wire [2:0] sub_op = instruction[14:12];
 	wire ex_alu = (sub_op == 5 || op == 7'b0010011)?instruction[30]:0; // use extra ops for SRAI/SRA and non-imm(sub/add)
-	alu alu(sub_op | (ex_alu << 4),rd0,(instruction[5])?rd1:imm_i,alu_out);
+	alu alu(sub_op | (ex_alu << 4),rd0,(instruction[5])?rd1:imm_i,alu_out,cmp_flag);
 	// wire [4:0] mo_rs1 = instruction[19:15];
 	// wire [4:0] mo_rs2 = instruction[24:20];
 	wire [31:0] imm_s = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
 	wire [31:0] imm_i = {{21{instruction[31]}}, instruction[30:20]};
+	wire [31:0] imm_b = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
 	// wire [4:0] mo_rd = instruction[11:7];
 
 	//wire [4:0] rs1 = odata[19:15];
@@ -113,6 +104,7 @@ end
 						microop <= microop_prog[8];
 					end
 					7'b0?10111: begin //LUI/AUIPC
+						// TODO: check if pc is +4 or not
 						regfile[odata[11:7]] <= imm_u + ((odata[5])?0:pc);
 						microop <= 0;
 					end
@@ -123,7 +115,7 @@ end
 						microop <= 0;
 					end
 					7'b1100011: begin // BRANCH
-						microop <= 12;
+						microop <= 32;
 					end
 					default:microop <= 0;
 
@@ -157,7 +149,7 @@ end
 					regfile[wa] <= odata;
 			end
 			if(store_alu) regfile[wa] <= alu_out;
-
+			if(alu_flags && cmp_flag) pc <= imm_b + pc - 4;
 		end
 	end
 

@@ -2,7 +2,8 @@ module alu
 	(
 	input [3:0]m,
 	input [31:0]a, b,
-	output reg [31:0]y
+	output reg [31:0]y,
+	output cmp
 	);
 	// zf: zero
 	// cf: carry out, WIDTH bit
@@ -17,7 +18,21 @@ module alu
 	wire sub_zf = (subtraction[31:0] == 32'h0);
 	wire sub_sf = subtraction[31];
 	wire sub_cf = subtraction[32];
+	reg compare;
+	assign cmp = compare ^ m[0];
 	always @ (*) begin
+		unique case(m[2:1])
+			2'b00:
+				compare = sub_zf;
+			2'b10:
+				compare = sub_sf;
+			//TODO: unsigned cmp \/
+			2'b11:
+				compare = sub_sf;
+			//TODO: bad instruction
+			2'b01:
+				compare = 0;
+		endcase
 		case(m)
 			4'b0000: // add
 				y = addition[31:0];
@@ -39,6 +54,7 @@ module alu
 				y = a | b;
 			4'b0111: // and
 				y = a & b;
+			//TODO: bad instruction
 			default: begin // error
 				y = 32'hDEADBEEF;
 			end

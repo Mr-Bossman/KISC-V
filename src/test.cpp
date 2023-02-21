@@ -14,7 +14,7 @@ int main(int argc, char **argv, char **env) {
 	sim->rts = 1;
 	sim->eval();
 	sim->rts = 0;
-	for(int i = 0; i < 50;i++){
+	for(int i = 0; i < 1000;i++){
 		printf("microop_pc 0x%0x pc: 0x%0x\n",sim->odat,sim->res);
 		sim->clk = 0;
 		sim->eval();
