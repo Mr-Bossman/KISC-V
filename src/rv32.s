@@ -11,3 +11,4 @@ start:
   sw x5, 0x400(x0)
   addi x5,x5,-1
   bne x5,x6,1b
+jal x8,start
