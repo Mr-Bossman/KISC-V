@@ -3,8 +3,9 @@
 
 .align 4
 start:
-  lw a5, (a6)
-	li a5,10
+  lw x4, (x0)
+  sw x4, 8(x0)
+	li x5,10
 1:
-  addi a5,a5,-1
-  bnez a5,1b
+  addi x5,x5,-1
+  bnez x5,1b
