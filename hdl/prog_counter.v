@@ -48,6 +48,7 @@ module prog_counter
 	wire APB_sel;
 	wire APB_ready;
 	wire APB_wr;
+	wire APB_err;
 	wire load_insr;
 	wire mem_access;
 	wire store_alu;
@@ -67,13 +68,13 @@ end
 	assign ra0 = instruction[19:15];
 	assign ra1 = instruction[24:20];
 	assign wa = instruction[11:7];
-	sram ram(clk,addr,data,odata,APB_sel,APB_en,APB_wr,dsize,APB_ready);
+	APB apb_bus(clk,addr,data,odata,APB_sel,APB_en,APB_wr,dsize,APB_ready,APB_err);
 
 
 
 
 	assign odat = microop;
-	assign res = instruction;
+	assign res = {2'b0,pc[31:2]};
 
 
 
@@ -107,16 +108,22 @@ end
 			if(load_insr) begin
 				instruction <= odata;
 				casez (odata[6:0])
-					7'b0?00011: begin // LOAD
+					7'b0?00011: begin // LOAD/STORE
 						microop_pc <= 8;
 						microop <= microop_prog[8];
 					end
-					7'b0?10111: begin
+					7'b0?10111: begin //LUI/AUIPC
 						regfile[odata[11:7]] <= imm_u + ((odata[5])?0:pc);
 						microop <= 0;
 					end
-					7'b0?10011: begin
+					7'b0?10011: begin // ALU
 						microop <= 4;
+					end
+					7'b110?111: begin // JAL/JALR
+						microop <= 0;
+					end
+					7'b1100011: begin // BRANCH
+						microop <= 12;
 					end
 					default:microop <= 0;
 
@@ -132,7 +139,7 @@ end
 					instruction <= 0;
 					microop_pc <= 1;
 					addr <= pc;
-					pc <= pc + 1;
+					pc <= pc + 4;
 					dsize <= 4'b1111;
 					microop <= microop_prog[0];
 				end
