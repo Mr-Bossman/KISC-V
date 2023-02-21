@@ -34,7 +34,7 @@ end
 assign pready = ready;
 assign perr = 0;
 always @(posedge pclk) begin
-	if(psel && penable) begin
+	if(psel && penable  && !ready) begin
 		if (pwrite) begin
 			for( i = 0; i <= (ADDR_WIDTH/8)-1;i = i + 1) begin
 				if(pstb[i])

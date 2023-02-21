@@ -15,6 +15,7 @@ module prog_counter
 	reg [31:0] pc = 0;
 	reg [31:0] instruction;
 	reg [3:0] dsize = 4'b1111;
+	reg halt = 0;
 
 
 /* Regfile start*/
@@ -95,9 +96,10 @@ end
 	always @(posedge clk or posedge rts) begin
 		if(rts)
 			pc <= 0;
-		else if(clk) begin
+		else if(!halt) begin
 			if(load_insr) begin
 				instruction <= odata;
+				if(odata == 32'b0) halt <= 1;
 				casez (odata[6:0])
 					7'b0?00011: begin // LOAD/STORE
 						microop_pc <= 8;
