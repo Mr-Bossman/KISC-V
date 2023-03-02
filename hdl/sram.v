@@ -1,7 +1,8 @@
 /* verilator lint_off UNUSEDSIGNAL */
 
 module sram
-	#(parameter ADDR_WIDTH = 32,
+	#(parameter FILE = "test.vh",
+		parameter ADDR_WIDTH = 32,
 		parameter DATA_WIDTH = 32,
 		parameter RAM_SIZE = 1000000)
 	(
@@ -20,7 +21,7 @@ module sram
 integer i;
 reg [DATA_WIDTH-1:0] mem[0:RAM_SIZE-1];
 initial begin
-	$readmemh("test.vh", mem);
+	$readmemh(FILE, mem);
 end
 always_comb begin: read_process
 	unique case(paddr[1:0])
