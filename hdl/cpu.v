@@ -166,7 +166,6 @@ end
 				endcase
 				APB_paddr <= ((op == 7'b0100011)?imm_s:imm_i) + rd0;
 				APB_pdata <= rd1;
-				/* TODO: cast 00 and 01 as ints if sub_op[2] is 0 */
 				if(APB_penable && APB_psel && APB_pready && (op == 7'b0000011)) begin
 					if(sub_op[2] == 1'b0) begin
 						unique case (sub_op[1:0])

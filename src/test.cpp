@@ -20,7 +20,7 @@ static void exit_now(int signo){
 	for(int i = 0; i < 32;i++){
 		printf("mem 0x%02x: 0x%08lx\n",i*4,sim->rootp->soc_top__DOT__ram__DOT__mem[i]);
 	}
-	for(int i = 0; i < 4;i++){
+	for(int i = 0; i < 10;i++){
 		printf("sys_mem 0x%02x: 0x%08lx\n",i*4,sim->rootp->soc_top__DOT__system__DOT__mem[i]);
 	}
 	sim->final();

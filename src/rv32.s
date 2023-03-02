@@ -4,28 +4,22 @@
 .align 4
 start:
 	la x10, 0x1000000
-	la x5, call
-	sw x5,0(x0)
-	ecall
-halt:
-	j halt
+	la x5, test
+	sw x5, 0xC(x0)
 2:
 	la x6, .texts
 1:
+	ecall
 	lw x5, 0(x6)
 	sb x5, 0(x10)
 	addi x6,x6,1
 	bne x5,x8,1b
 	.word 0x00;
 
-
-back:
+test:
+	li x5, 'a'
+	sb x5, 0(x10)
 	ecall
-call:
-	lw x5, 0(x0)
-	addi x5,x5,4
-	sw x5,0(x0)
-	j back
 
 .texts:
 	.ascii "test\n";
