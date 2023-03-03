@@ -47,7 +47,7 @@ module APB
 			sram_enable = penable;
 			pready = sram_ready;
 			prdata = sram_data;
-		end else if (paddr == 'h1000000) begin
+		end else if (paddr == 'h10000000 || paddr == 'h10000005) begin
 			access_fault = 0;
 			sram_sel = 0;
 			sram_enable = 0;

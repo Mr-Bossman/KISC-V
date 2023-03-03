@@ -179,7 +179,7 @@ end
 				end
 			end
 			if(sys_load) begin
-				APB_paddr <= 0;
+				APB_paddr <= 4;
 				APB_pdata <= pc;
 				if(APB_penable && APB_psel && APB_pready && APB_pwrite) begin
 					pc <= systmp;

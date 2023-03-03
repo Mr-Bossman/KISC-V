@@ -2,7 +2,7 @@
 TESTS_PATH=riscv-tests/isa/rv32ui
 BUILD_DIR = ../build
 CROSS_COMPILE=riscv32-linux-
-CLFAGS = -I$(TESTS_PATH)/../macros/scalar -I$(TESTS_PATH)/../../env -Icustom/
+CLFAGS = -march=rv32izicsr -mabi=ilp32 -I$(TESTS_PATH)/../macros/scalar -I$(TESTS_PATH)/../../env -Icustom/
 #include $(TESTS_PATH)/Makefrag
 rv32ui_sc_tests = \
 	simple \

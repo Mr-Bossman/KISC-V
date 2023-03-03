@@ -3,13 +3,19 @@
 
 .align 4
 start:
-	la x10, 0x1000000
+	la x10, 0x10000000
+	li x1, 1
+	li x2, 2
+	li x3, 3
+	li x4, 4
+	li x6, 6
+	li x7, 7
 	la x5, test
-	sw x5, 0xC(x0)
+	csrrw x0, 0x305, x5
 2:
 	la x6, .texts
-1:
 	ecall
+1:
 	lw x5, 0(x6)
 	sb x5, 0(x10)
 	addi x6,x6,1
@@ -19,7 +25,7 @@ start:
 test:
 	li x5, 'a'
 	sb x5, 0(x10)
-	ecall
+	mret
 
 .texts:
 	.ascii "test\n";

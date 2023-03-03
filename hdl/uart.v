@@ -15,13 +15,12 @@ module uart
 		input [3:0] pstb,
 		output reg ready,
 		output perr);
-assign prdata = 0;
+assign prdata = 32'h00000060;
 reg rderr = 0;
 assign perr = rderr; //paddr[1] | paddr[0] |
 always @(posedge pclk) begin
 	if(psel && penable && !ready) begin
 		if (pwrite) $write("%c",pdata[7:0]);
-		else rderr <= 1;
 		ready <= 1;
 	end
 	else ready <= 0;

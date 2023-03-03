@@ -1,8 +1,9 @@
-__stack_size = 0x100;
+__stack_size = 0x400;
 ENTRY(_start)
 
 SECTIONS
 {
+	CPUregs = 0x00000000;
 	. = 0x00000000;
 	.text : ALIGN(16) {
 		*(.asm)
