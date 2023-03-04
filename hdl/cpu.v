@@ -54,6 +54,8 @@ module cpu
 	wire alu_flags = microop[5];
 	wire load_pc = microop[6];
 	wire sys_load = microop[7];
+	wire lui_flag = microop[9];
+	wire jal_flag = microop[10];
 	wire cmp_flag;
 /* flags end */
 initial begin
@@ -90,6 +92,42 @@ end
 
 	wire [31:0] imm_j = {{12{odata[31]}}, odata[19:12], odata[20], odata[30:21], 1'b0};
 	wire [31:0] imm_u = {odata[31:12], 12'b0};
+
+/* Decode instruction groups start */
+	reg[7:0] op_jmp;
+	always_comb begin
+		casez (odata[6:0])
+			7'b0100011: begin // STORE
+				op_jmp = 1*8;
+			end
+			7'b0000011: begin // LOAD
+				op_jmp = 2*8;
+			end
+			7'b0?10111: begin //LUI/AUIPC
+				op_jmp = 7*8;
+			end
+			7'b0?10011: begin // ALU
+				op_jmp = 4*8;
+			end
+			7'b1101111: begin // JAL
+				op_jmp = 8*8;
+			end
+			7'b1100111: begin // JALR
+				op_jmp = 5*8;
+			end
+			7'b1100011: begin // BRANCH
+				op_jmp = 6*8;
+			end
+			7'b1110011: begin // SYSTEM
+				op_jmp = 3*8;
+			end
+			default: begin // SYSTEM
+				op_jmp = 3*8;
+			end
+		endcase
+	end
+/* Decode instruction groups end */
+
 	always @(posedge clk or posedge rts) begin
 		if(rts) begin
 			pc <= 0;
@@ -102,65 +140,32 @@ end
 			if(load_insr) begin
 				instruction <= odata;
 				if(odata == 32'b0) halt <= 1;
-				casez (odata[6:0])
-					7'b0100011: begin // STORE
-						microop_pc <= 9;
-						microop <= microop_prog[8];
-					end
-					7'b0000011: begin // LOAD
-						microop_pc <= 17;
-						microop <= microop_prog[16];
-					end
-					7'b0?10111: begin //LUI/AUIPC
-						// TODO: check if pc is +4 or not
-						regfile[odata[11:7]] <= imm_u + ((odata[5])?0:pc-4);
-						microop_pc <= 57;
-						microop <= microop_prog[56];
-					end
-					7'b0?10011: begin // ALU
-						microop_pc <= 33;
-						microop <= microop_prog[32];
-					end
-					7'b1101111: begin // JAL
+				if(odata[6:0] == 7'b1101111) begin // JAL
 						regfile[odata[11:7]] <= pc;
 						pc <= pc + imm_j - 4;
-						microop_pc <= 65;
-						microop <= microop_prog[64];
-					end
-					7'b1100111: begin // JALR
-						microop_pc <= 41;
-						microop <= microop_prog[40];
-					end
-					7'b1100011: begin // BRANCH
-						microop_pc <= 49;
-						microop <= microop_prog[48];
-					end
-					7'b1110011: begin // SYSTEM
-						microop_pc <= 24;
-						microop <= 24'h080;
-					end
-					default: begin // SYSTEM
-						microop_pc <= 24;
-						microop <= 24'h080;
-					end
-
-
-				endcase
+				end
+				microop_pc <= microop_prog[op_jmp][23:16];
+				microop <= microop_prog[op_jmp];
 			end
 			// halt till APB_pready is ready
 			else if(!(APB_penable && APB_psel && !APB_pready)) begin
-				if(microop[11:0] != 12'h800) begin
-					microop_pc <= microop_pc + 1;
+					microop_pc <= microop_prog[microop_pc][23:16];
 					microop <= microop_prog[microop_pc];
-				end else begin
+				if(microop[23:16] == 0) begin
 					instruction <= 0;
-					microop_pc <= 1;
 					APB_paddr <= pc;
 					pc <= pc + 4;
 					dsize <= 4'b1111;
-					microop <= microop_prog[0];
 					oldpc <= pc;
 				end
+			end
+			if(lui_flag) begin
+				regfile[odata[11:7]] <= imm_u + ((odata[5])?0:pc-4);
+			end
+			/* TODO: not working */
+			if(jal_flag && 0) begin
+				regfile[odata[11:7]] <= pc;
+				pc <= pc + imm_j - 4;
 			end
 			if(mem_access) begin
 				unique case (sub_op[1:0])
