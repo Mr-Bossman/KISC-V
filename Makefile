@@ -35,14 +35,14 @@ run_tests: all tests
 rv32asm: src/rv32.s src/rv32.lds
 	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/rv32.s -o $(BUILD_DIR)/example.o
 	$(TARGET_LD) --gc-sections -T src/rv32.lds $(BUILD_DIR)/example.o -o $(BUILD_DIR)/example.elf
-	$(CROSS_COMPILE)objcopy -O verilog --verilog-data-width=4 $(BUILD_DIR)/example.elf test.vh
+	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/example.elf test.vh
 	sed -i s/@.*//g test.vh
 
 system: src/system.S src/system.lds rv32asm
 	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/system.S -o $(BUILD_DIR)/system_start.o
 	$(TARGET_CC) -march=rv32izicsr -O2 -mabi=ilp32 -c src/system.c -o $(BUILD_DIR)/system.o
 	$(TARGET_LD) --gc-sections -T src/system.lds $(BUILD_DIR)/system_start.o $(BUILD_DIR)/system.o -o $(BUILD_DIR)/system.elf
-	$(CROSS_COMPILE)objcopy -O verilog --verilog-data-width=4 $(BUILD_DIR)/system.elf system.vh
+	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/system.elf system.vh
 	sed -i s/@.*//g system.vh
 
 clean_exe:
@@ -50,3 +50,5 @@ clean_exe:
 
 clean :
 	rm -rf $(PREFIX_NAME) $(BUILD_DIR)/
+
+#riscv32-unknown-elf-objcopy -O verilog --verilog-data-width=4 --gap-fill 0 -g -R .riscv.attributes ~/linux/rv32/linux/vmlinux test.vh
