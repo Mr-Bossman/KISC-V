@@ -40,7 +40,7 @@ module cpu
 /* AHB start */
 	assign APB_psel = microop[0];
 	assign APB_penable = microop[1];
-	assign APB_pwrite = microop[8];
+	assign APB_pwrite = microop[2];
 	reg [3:0] dsize = 4'b1111;
 	/* APB spec dissalows read Byte mask */
 	assign APB_pstb = (APB_pwrite)?dsize:4'b1111;
@@ -48,12 +48,12 @@ module cpu
 	reg [31:0] odata;
 /* AHB end */
 /* flags start */
-	wire store_alu = microop[2];
 	wire load_insr = microop[3];
 	wire mem_access = microop[4];
 	wire alu_flags = microop[5];
 	wire load_pc = microop[6];
 	wire sys_load = microop[7];
+	wire store_alu = microop[8];
 	wire lui_flag = microop[9];
 	wire jal_flag = microop[10];
 	wire cmp_flag;
