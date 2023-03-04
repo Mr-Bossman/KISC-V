@@ -171,9 +171,9 @@ end
 					2'b10: dsize <= 4'b1111;
 					default: dsize <= 4'b1111;
 				endcase
-				APB_paddr <= ((op == 7'b0100011)?imm_s:imm_i) + rd0;
+				APB_paddr <= ((APB_pwrite)?imm_s:imm_i) + rd0;
 				APB_pdata <= rd1;
-				if(APB_penable && APB_psel && APB_pready && (op == 7'b0000011)) begin
+				if(APB_penable && APB_psel && APB_pready && !APB_pwrite) begin
 					if(sub_op[2] == 1'b0) begin
 						unique case (sub_op[1:0])
 							2'b00: regfile[wa] <= {{24{odata[7]}},odata[7:0]};
