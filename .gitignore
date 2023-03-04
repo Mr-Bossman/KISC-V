@@ -1,2 +1,3 @@
-build
+build/*
+!build/.hidden
 RV32emu
