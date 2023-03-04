@@ -29,6 +29,13 @@ static void exit_now(int signo){
 	exit(signo);
 }
 
+static void dump(){
+	FILE *fp = fopen("dump.bin","w+");
+	printf("Dumping memory to dump.bin of size 0x%04x\n",sizeof(sim->rootp->soc_top__DOT__ram__DOT__mem));
+	fwrite(&sim->rootp->soc_top__DOT__ram__DOT__mem[0],1,sizeof(sim->rootp->soc_top__DOT__ram__DOT__mem),fp);
+	fclose(fp);
+}
+
 int main(int argc, char **argv, char **env) {
 	signal(SIGINT, exit_now);
 	Verilated::commandArgs(argc, argv);
@@ -55,6 +62,7 @@ int main(int argc, char **argv, char **env) {
 		clock_count++;
 	}
 	printf("PC 0x%0x\n",sim->oldpc);
+	//dump();
 	exit_now(0);
 	return 0;
 }

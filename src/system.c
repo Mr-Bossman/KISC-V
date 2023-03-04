@@ -75,10 +75,10 @@ void entry(void) {
 			printS("Unimplemented\n\r");
 			break;
 		}
-		//case 0x2F: // AMO
-		//	ret = AMOx(instr);
-		//	printS("AMOx\n\r");
-		//	break;
+		case 0x2F: // AMO
+			ret = AMOx(instr);
+			printS("AMOx\n\r");
+			break;
 		default:
 			printS("PC: ");
 			printH((uint32_t)CPUregs->pc);
@@ -224,7 +224,7 @@ static int AMOx(uint32_t instr) {
 
 static inline void printC(uint8_t c){
 	static volatile uint8_t* const uart = (volatile uint8_t* const)0x10000000;
-	*uart = c;
+	//*uart = c;
 }
 
 static void printS(const char* s) {
