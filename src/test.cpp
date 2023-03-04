@@ -25,7 +25,7 @@ static void exit_now(int signo){
 	}
 	sim->final();
 	delete sim;
-	printf("IPC: %lf instructions/clock\nCPI: %lf clock/instructions\n",(double)instruction_count/clock_count,(double)clock_count/instruction_count);
+	printf("IPC: %lf instructions/clock\nCPI: %lf clock/instructions, count %d\n",(double)instruction_count/clock_count,(double)clock_count/instruction_count, instruction_count);
 	exit(signo);
 }
 
@@ -47,13 +47,14 @@ int main(int argc, char **argv, char **env) {
 		sim->clk = 1;
 		sim->eval();
 		if(sim->oldpc != oldpc){
-			printf("pc: 0x%0x\n",sim->oldpc);
+			//printf("pc: 0x%0x\n",sim->oldpc);
 			oldpc = sim->oldpc;
 			instruction_count++;
 			//printf("IPC: %lf instructions/clock,\tCPI: %lf clock/instructions\n",(double)instruction_count/clock_count,(double)clock_count/instruction_count);
 		}
 		clock_count++;
 	}
+	printf("PC 0x%0x\n",sim->oldpc);
 	exit_now(0);
 	return 0;
 }

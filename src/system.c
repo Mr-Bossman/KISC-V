@@ -26,7 +26,7 @@ enum {
 	csr_misa,
 };
 
-volatile uint32_t CSRs[10]  = {0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff};
+volatile uint32_t CSRs[10]  = {0};
 static const uint32_t csrnums[18] = {0x300,0xC00,0x340,0x305,0x304,0x344,0x341,0x343,0x342,0xf11,0x301};
 
 static int xRET(uint32_t instr);
@@ -34,6 +34,7 @@ static int FENCE(uint32_t instr);
 static int CSRx(uint32_t instr);
 static int ECALL(uint32_t instr);
 static int AMOx(uint32_t instr);
+static int bad_instruction(uint32_t instr);
 
 static int csr_num(uint32_t csr);
 static void csr_wr(uint32_t csr, uint32_t val);
@@ -41,6 +42,8 @@ static uint32_t csr_rd(uint32_t csr);
 
 static inline void printC(uint8_t c);
 static void printS(const char* s);
+static void printI(int i);
+static void printH(uint32_t i);
 
 void entry(void) {
 	uint32_t instr = *(CPUregs->pc-1);
@@ -50,6 +53,7 @@ void entry(void) {
 	switch(opcode) {
 		case 0x0F: // FENCE/FENCE.I
 			ret = FENCE(instr);
+			printS("FENCE\n\r");
 			break;
 		case 0x73: { // ECALL/EBREAK // CSRRW/CSRRS/CSRRC/CSRRWI/CSRRSI/CSRRCI
 			uint32_t checkA = (instr&(~0x0010007F));
@@ -57,26 +61,28 @@ void entry(void) {
 			uint32_t checkC = (instr>>12)&3;
 			if(checkA == 0x0) { // ECALL/EBREAK
 				ret = ECALL(instr);
-				printS("ECALL");
+				printS("ECALL\n\r");
 				break;
 			} else if(checkB == 0x0) { // xRET
 				ret = xRET(instr);
-				//printS("xRET");
+				printS("xRET\n\r");
 				break;
 			} else if (checkC != 4) {  // CSRRW/CSRRS/CSRRC/CSRRWI/CSRRSI/CSRRCI
 				ret = CSRx(instr);
-				//printS("CSRx");
+				printS("CSRx\n\r");
 				break;
 			}
 			ret = -1;
-			//printS("Unimplemented");
+			printS("Unimplemented\n\r");
 			break;
 		}
-		case 0x2F: // AMO
-			ret = AMOx(instr);
-			break;
+		//case 0x2F: // AMO
+		//	ret = AMOx(instr);
+		//	printS("AMOx\n\r");
+		//	break;
 		default:
-			_exit_();
+			ret = bad_instruction(instr);
+			printS("Bad_instruction\n\r");
 			break;
 	}
 }
@@ -92,7 +98,7 @@ static int FENCE(uint32_t instr) {
 }
 
 static int ECALL(uint32_t instr) {
-	//if(instr == 0x0000007F) {
+	if(instr == 0x0000007F) {
 		int mstatus = CSRs[csr_mstatus] ;
 		CSRs[csr_mepc] = (uint32_t)CPUregs->pc;
 		CSRs[csr_mcause] = (mstatus & (3<<11))?11:8; // ECALL?
@@ -106,7 +112,24 @@ static int ECALL(uint32_t instr) {
 		}
 		mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8) | (3 << 11); // set move mie to mpie
 		CSRs[csr_mstatus] = mstatus;
-	//}
+	}
+	return 0;
+}
+
+static int bad_instruction(uint32_t instr) {
+	int mstatus = CSRs[csr_mstatus] ;
+	CSRs[csr_mepc] = (uint32_t)CPUregs->pc;
+	CSRs[csr_mcause] = 2; // Bad instruction
+	CSRs[csr_mtval] = (uint32_t)CPUregs->pc; // ECALL?
+	if(CPUregs->tmp_pc == 0) { //need a stack
+		CPUregs->tmp_pc = CPUregs->pc;
+		CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
+	} else {
+		CPUregs->pc = CPUregs->tmp_pc;
+		CPUregs->tmp_pc = 0;
+	}
+	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8) | (3 <<11); // set move mie to mpie
+	CSRs[csr_mstatus] = mstatus;
 	return 0;
 }
 
@@ -140,7 +163,9 @@ static int CSRx(uint32_t instr) {
 	uint32_t microop = (instr >> 12) & 0x7;
 	uint32_t rs1imm = (instr >> 15) & 0x1f;
 	uint32_t* rsd = &CPUregs->regs[(instr >> 7) & 0x1f];
-
+	printS("CSRx: ");
+	printH(csr);
+	printS("\n\r");
 	if(!(microop>>2))
 		rs1imm = CPUregs->regs[rs1imm];
 	csrval = csr_rd(csr);
@@ -220,4 +245,31 @@ static inline void printC(uint8_t c){
 static void printS(const char* s) {
 	while(*s)
 		printC(*s++);
+}
+
+static void printI(int i) {
+	static char s[12];
+	int j = 0;
+	if(i < 0) {
+		printC('-');
+		i = -i;
+	}
+	do {
+		s[j++] = '0' + (i % 10);
+		i /= 10;
+	} while(i);
+	while(j)
+		printC(s[--j]);
+}
+
+static void printH(uint32_t i) {
+	static const char hex[16]  = "0123456789abcdef";
+	static char s[9];
+	int j = 0;
+	do {
+		s[j++] = hex[i & 0xf];
+		i >>= 4;
+	} while(i);
+	while(j)
+		printC(s[--j]);
 }

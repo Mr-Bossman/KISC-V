@@ -20,7 +20,14 @@ reg rderr = 0;
 assign perr = rderr; //paddr[1] | paddr[0] |
 always @(posedge pclk) begin
 	if(psel && penable && !ready) begin
-		if (pwrite) $write("%c",pdata[7:0]);
+		if (pwrite) begin
+			unique case(paddr[1:0])
+					2'b00: $write("%c",pdata[7:0]);
+					2'b01: $write("%c",pdata[15:8]);
+					2'b10: $write("%c",pdata[23:16]);
+					2'b11: $write("%c",pdata[31:24]);
+			endcase
+		end
 		ready <= 1;
 	end
 	else ready <= 0;

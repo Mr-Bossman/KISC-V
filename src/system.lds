@@ -1,9 +1,8 @@
-__stack_size = 0x400;
+__stack_size = 0x800;
 ENTRY(_start)
 
 SECTIONS
 {
-	CPUregs = 0x00000000;
 	. = 0x00000000;
 	.text : ALIGN(16) {
 		*(.asm)
@@ -33,6 +32,13 @@ SECTIONS
 		*(.got)
 		*(.got.*)
 		__DATA_END__ = .;
+	}
+
+	.bss : ALIGN( 16 ) {
+		__BSS_BEGIN__ = .;
+		*(.bss)
+		*(.bss.*)
+		__BSS_END__ = .;
 	}
 
 	.stack : ALIGN( 16 ) {

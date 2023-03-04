@@ -36,6 +36,10 @@ module APB
 	reg access_fault;
 	assign perr = sram_perr | uart_perr | system_perr | access_fault;
 
+	always @(posedge access_fault) begin
+		$display("Access fault: %h", paddr);
+	end
+
 	always_comb begin
 		if(paddr >= 'h80000000) begin
 			access_fault = 0;
@@ -57,7 +61,7 @@ module APB
 			uart_enable = penable;
 			pready = uart_ready;
 			prdata = uart_data;
-		end else if (paddr <= 'hfff)begin
+		end else if (paddr <= 'hffff)begin
 			access_fault = 0;
 			uart_sel = 0;
 			uart_enable = 0;
