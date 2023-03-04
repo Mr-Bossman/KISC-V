@@ -31,9 +31,9 @@ module cpu
 	assign rd1 = ra1 == 5'b0 ? 0 : regfile[ra1];
 /* Regfile end*/
 
-	reg [3:0] microop_pc = 0;
-	reg [11:0] microop_prog[0:15];
-	reg [11:0] microop;
+	reg [7:0] microop_pc = 0;
+	reg [23:0] microop_prog[0:128];
+	reg [23:0] microop;
 
 	wire [31:0] alu_out;
 
@@ -94,7 +94,7 @@ end
 		if(rts) begin
 			pc <= 0;
 			APB_paddr <= 0;
-			microop <= 12'h800;
+			microop <= 24'h800;
 			halt <= 0;
 		end else if(!halt) begin
 			// TODO: do trap
@@ -104,39 +104,44 @@ end
 				if(odata == 32'b0) halt <= 1;
 				casez (odata[6:0])
 					7'b0100011: begin // STORE
-						microop_pc <= 3;
-						microop <=  12'h010;
+						microop_pc <= 9;
+						microop <= microop_prog[8];
 					end
 					7'b0000011: begin // LOAD
-						microop_pc <= 6;
-						microop <=  12'h010;
+						microop_pc <= 17;
+						microop <= microop_prog[16];
 					end
 					7'b0?10111: begin //LUI/AUIPC
 						// TODO: check if pc is +4 or not
 						regfile[odata[11:7]] <= imm_u + ((odata[5])?0:pc-4);
-						microop <= 12'h800;
+						microop_pc <= 57;
+						microop <= microop_prog[56];
 					end
 					7'b0?10011: begin // ALU
-						microop <= 4;
+						microop_pc <= 33;
+						microop <= microop_prog[32];
 					end
 					7'b1101111: begin // JAL
 						regfile[odata[11:7]] <= pc;
 						pc <= pc + imm_j - 4;
-						microop <= 12'h800;
+						microop_pc <= 65;
+						microop <= microop_prog[64];
 					end
 					7'b1100111: begin // JALR
-						microop <= 12'h040;
+						microop_pc <= 41;
+						microop <= microop_prog[40];
 					end
 					7'b1100011: begin // BRANCH
-						microop <= 12'h020;
+						microop_pc <= 49;
+						microop <= microop_prog[48];
 					end
 					7'b1110011: begin // SYSTEM
-						microop_pc <= 9;
-						microop <= 12'h080;
+						microop_pc <= 24;
+						microop <= 24'h080;
 					end
 					default: begin // SYSTEM
-						microop_pc <= 9;
-						microop <= 12'h080;
+						microop_pc <= 24;
+						microop <= 24'h080;
 					end
 
 
@@ -144,7 +149,7 @@ end
 			end
 			// halt till APB_pready is ready
 			else if(!(APB_penable && APB_psel && !APB_pready)) begin
-				if(microop != 12'h800) begin
+				if(microop[11:0] != 12'h800) begin
 					microop_pc <= microop_pc + 1;
 					microop <= microop_prog[microop_pc];
 				end else begin
