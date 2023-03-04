@@ -51,4 +51,8 @@ clean_exe:
 clean :
 	rm -rf $(PREFIX_NAME) $(BUILD_DIR)/
 
-#riscv32-unknown-elf-objcopy -O verilog --verilog-data-width=4 --gap-fill 0 -g -R .riscv.attributes ~/linux/rv32/linux/vmlinux test.vh
+testkern:
+	$(CROSS_COMPILE)objcopy -Obinary linux/vmlinux test.bin
+	truncate -s 16777216 test.bin # 0x1000000
+	cat linux/test.dtb >> test.bin
+	$(CROSS_COMPILE)objcopy -Ibinary -O verilog --verilog-data-width=4 --reverse-bytes=4 test.bin test.vh

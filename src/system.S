@@ -6,7 +6,7 @@
 #define LOAD_REGS(reg) lw x##reg, ((reg*4)+0x10)(x0)
 
 .align 4
-	.word 0x00
+	j _init
 interrupt:
 	.word _start
 reason_code:
@@ -83,4 +83,10 @@ _start:
 	LOAD_REGS(29)
 	LOAD_REGS(30)
 	LOAD_REGS(31)
+	j back
+_init:
+	la x1, 0x80000000
+	sw x1, 0x4(x0)
+	la x11, 0x81000000
+	mv x1,x0
 	j back

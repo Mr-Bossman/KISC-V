@@ -92,8 +92,8 @@ end
 	wire [31:0] imm_u = {odata[31:12], 12'b0};
 	always @(posedge clk or posedge rts) begin
 		if(rts) begin
-			pc <= 'h80000000;
-			APB_paddr <= 'h80000000;
+			pc <= 0;
+			APB_paddr <= 0;
 			microop <= 12'h800;
 			halt <= 0;
 		end else if(!halt) begin
