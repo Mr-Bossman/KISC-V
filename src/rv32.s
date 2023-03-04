@@ -25,6 +25,9 @@ start:
 test:
 	li x5, 'a'
 	sb x5, 0(x10)
+	csrrs x5, 0x341, x0
+	addi x5,x5,4
+	csrrw x0, 0x341, x5
 	mret
 
 .texts:

@@ -5,7 +5,6 @@ extern void _exit_(void);
 struct cpu_regs {
 	uint32_t* pc;
 	uint32_t reson_code;
-	uint32_t* tmp_pc;
 	uint32_t* sys;
 	uint32_t regs[32];
 };
@@ -81,6 +80,11 @@ void entry(void) {
 		//	printS("AMOx\n\r");
 		//	break;
 		default:
+			printS("PC: ");
+			printH((uint32_t)CPUregs->pc);
+			printS("\n\rInstr: ");
+			printH(instr);
+			printS("\n\r");
 			ret = bad_instruction(instr);
 			printS("Bad_instruction\n\r");
 			break;
@@ -98,18 +102,12 @@ static int FENCE(uint32_t instr) {
 }
 
 static int ECALL(uint32_t instr) {
-	if(instr == 0x0000007F) {
+	if(instr == 0x00000073) {
 		int mstatus = CSRs[csr_mstatus] ;
-		CSRs[csr_mepc] = (uint32_t)CPUregs->pc;
+		CSRs[csr_mepc] = ((uint32_t)CPUregs->pc)-4;
 		CSRs[csr_mcause] = (mstatus & (3<<11))?11:8; // ECALL?
 		CSRs[csr_mtval] = 0x0; // ECALL?
-		if(CPUregs->tmp_pc == 0) { //need a stack
-			CPUregs->tmp_pc = CPUregs->pc;
-			CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
-		} else {
-			CPUregs->pc = CPUregs->tmp_pc;
-			CPUregs->tmp_pc = 0;
-		}
+		CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
 		mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8) | (3 << 11); // set move mie to mpie
 		CSRs[csr_mstatus] = mstatus;
 	}
@@ -118,16 +116,10 @@ static int ECALL(uint32_t instr) {
 
 static int bad_instruction(uint32_t instr) {
 	int mstatus = CSRs[csr_mstatus] ;
-	CSRs[csr_mepc] = (uint32_t)CPUregs->pc;
+	CSRs[csr_mepc] = ((uint32_t)CPUregs->pc)-4;
 	CSRs[csr_mcause] = 2; // Bad instruction
-	CSRs[csr_mtval] = (uint32_t)CPUregs->pc; // ECALL?
-	if(CPUregs->tmp_pc == 0) { //need a stack
-		CPUregs->tmp_pc = CPUregs->pc;
-		CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
-	} else {
-		CPUregs->pc = CPUregs->tmp_pc;
-		CPUregs->tmp_pc = 0;
-	}
+	CSRs[csr_mtval] = ((uint32_t)CPUregs->pc)-4; // ECALL?
+	CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
 	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8) | (3 <<11); // set move mie to mpie
 	CSRs[csr_mstatus] = mstatus;
 	return 0;
@@ -199,14 +191,7 @@ static int xRET(uint32_t instr) {
 			return -1;
 	}
 	if(imm_i != 0x105) {
-		CSRs[csr_mstatus] = mstatus;
-		if(CPUregs->tmp_pc == 0) {
-			CPUregs->tmp_pc = CPUregs->pc;
-			CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
-		} else {
-			CPUregs->pc = CPUregs->tmp_pc;
-			CPUregs->tmp_pc = 0;
-		}
+		CPUregs->pc = CSRs[csr_mepc];
 	}
 	return 0;
 }

@@ -2,16 +2,14 @@
 .global _start
 .global _exit_
 
-#define STORE_REGS(reg) sw x##reg, ((reg*4)+0x14)(x0)
-#define LOAD_REGS(reg) lw x##reg, ((reg*4)+0x14)(x0)
+#define STORE_REGS(reg) sw x##reg, ((reg*4)+0x10)(x0)
+#define LOAD_REGS(reg) lw x##reg, ((reg*4)+0x10)(x0)
 
 .align 4
 	.word 0x00
 interrupt:
 	.word _start
 reason_code:
-	.word 0x00
-tmp_pc:
 	.word 0x00
 reg_store:
 	.fill 32, 4
