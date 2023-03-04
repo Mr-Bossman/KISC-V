@@ -54,8 +54,9 @@ module cpu
 	wire load_pc = microop[6];
 	wire sys_load = microop[7];
 	wire store_alu = microop[8];
-	wire lui_flag = microop[9];
-	wire jal_flag = microop[10];
+	/* These happen in the same cycle as load_insr */
+	wire lui_flag = (load_insr)?microop_prog[op_jmp][9]:0;
+	wire jal_flag = (load_insr)?microop_prog[op_jmp][10]:0;
 	wire cmp_flag;
 /* flags end */
 initial begin
@@ -140,10 +141,6 @@ end
 			if(load_insr) begin
 				instruction <= odata;
 				if(odata == 32'b0) halt <= 1;
-				if(odata[6:0] == 7'b1101111) begin // JAL
-						regfile[odata[11:7]] <= pc;
-						pc <= pc + imm_j - 4;
-				end
 				microop_pc <= microop_prog[op_jmp][23:16];
 				microop <= microop_prog[op_jmp];
 			end
@@ -163,7 +160,7 @@ end
 				regfile[odata[11:7]] <= imm_u + ((odata[5])?0:pc-4);
 			end
 			/* TODO: not working */
-			if(jal_flag && 0) begin
+			if(jal_flag) begin
 				regfile[odata[11:7]] <= pc;
 				pc <= pc + imm_j - 4;
 			end
@@ -206,5 +203,4 @@ end
 			end
 		end
 	end
-
 endmodule
