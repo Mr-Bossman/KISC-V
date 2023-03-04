@@ -85,8 +85,10 @@ _start:
 	LOAD_REGS(31)
 	j back
 _init:
+	li x1, 0x1800
+	csrrw x0, 0x300,x1
+	la x11, 0x81000000
 	la x1, 0x80000000
 	sw x1, 0x4(x0)
-	la x11, 0x81000000
 	mv x1,x0
 	j back

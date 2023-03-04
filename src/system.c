@@ -25,8 +25,8 @@ enum {
 	csr_misa,
 };
 
-volatile uint32_t CSRs[10]  = {0};
 static const uint32_t csrnums[18] = {0x300,0xC00,0x340,0x305,0x304,0x344,0x341,0x343,0x342,0xf11,0x301};
+volatile uint32_t CSRs[sizeof(csrnums)]  = {0};
 
 static int xRET(uint32_t instr);
 static int FENCE(uint32_t instr);
@@ -108,7 +108,7 @@ static int ECALL(uint32_t instr) {
 		CSRs[csr_mcause] = (mstatus & (3<<11))?11:8; // ECALL?
 		CSRs[csr_mtval] = 0x0; // ECALL?
 		CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
-		mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8) | (3 << 11); // set move mie to mpie
+		mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8); // set move mie to mpie
 		CSRs[csr_mstatus] = mstatus;
 	}
 	return 0;
@@ -120,7 +120,7 @@ static int bad_instruction(uint32_t instr) {
 	CSRs[csr_mcause] = 2; // Bad instruction
 	CSRs[csr_mtval] = ((uint32_t)CPUregs->pc)-4; // ECALL?
 	CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
-	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8) | (3 <<11); // set move mie to mpie
+	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~( 0x8 | (3 <<11))); // set move mie to mpie
 	CSRs[csr_mstatus] = mstatus;
 	return 0;
 }
@@ -179,9 +179,10 @@ static int xRET(uint32_t instr) {
 		case 0x002: // URET
 			// move mie to mpie and set mpie
 			mstatus = ((mstatus & 0x10) >> 4) | 0x10 | (mstatus & ~(3 << 11));
+			break;
 		case 0x302: // MRET
 			// move mie to mpie and set mpie
-			mstatus |= ((mstatus & 0x80) >> 4) | 0x80;
+			mstatus |= ((mstatus & 0x80) >> 4) | 0x80 | (mstatus & ~(3 << 11));
 			break;
 		case 0x105: // WFI
 			break;
@@ -191,6 +192,7 @@ static int xRET(uint32_t instr) {
 			return -1;
 	}
 	if(imm_i != 0x105) {
+		CSRs[csr_mstatus] = mstatus;
 		CPUregs->pc = CSRs[csr_mepc];
 	}
 	return 0;
