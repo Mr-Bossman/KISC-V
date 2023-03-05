@@ -1,8 +1,8 @@
 module cpu
-	#(parameter APB_paddr_WIDTH = 32,
+	#(parameter ADDR_WIDTH = 32,
 	  parameter DATA_WIDTH = 32)
 	(input clk,
-	output reg [APB_paddr_WIDTH-1:0] APB_paddr,
+	output reg [ADDR_WIDTH-1:0] APB_paddr,
 	output reg [DATA_WIDTH-1:0] APB_pdata,
 	input [DATA_WIDTH-1:0]  APB_prdata,
 	output APB_psel,
@@ -11,6 +11,7 @@ module cpu
 	output [3:0] APB_pstb,
 	input APB_pready,
 	input APB_perr,
+	input interrupt,
 	input rts, output halted,
 	output [31:0]odat,output reg [31:0] oldpc);
 	reg [31:0] pc;
@@ -83,9 +84,12 @@ end
 /* READ byte mask end */
 
 /* debug start */
+/* verilator lint_off UNUSEDSIGNAL */
 /* verilator lint_off WIDTH */
+	wire not_use = interrupt;
 	assign odat = microop;
 /* verilator lint_on WIDTH */
+/* verilator lint_on UNUSEDSIGNAL */
 /* debug end */
 	wire ex_alu = (sub_op == 5 || op == 7'b0110011)?instruction[30]:0; // use extra ops for SRAI/SRA and non-imm(sub/add)
 	// use add imm for 1100111 AKA JALR
@@ -133,7 +137,7 @@ end
 		if(rts) begin
 			pc <= 0;
 			APB_paddr <= 0;
-			microop <= 24'h800;
+			microop <= 0;
 			halt <= 0;
 		end else if(!halt) begin
 			// TODO: do trap
@@ -146,8 +150,8 @@ end
 			end
 			// halt till APB_pready is ready
 			else if(!(APB_penable && APB_psel && !APB_pready)) begin
-					microop_pc <= microop_prog[microop_pc][23:16];
-					microop <= microop_prog[microop_pc];
+				microop_pc <= microop_prog[microop_pc][23:16];
+				microop <= microop_prog[microop_pc];
 				if(microop[23:16] == 0) begin
 					instruction <= 0;
 					APB_paddr <= pc;

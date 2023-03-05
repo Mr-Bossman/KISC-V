@@ -32,7 +32,13 @@ module APB
 		output reg system_enable,
 		input [DATA_WIDTH-1:0]system_data,
 		input system_ready,
-		input system_perr);
+		input system_perr,
+
+		output reg intc_sel,
+		output reg intc_enable,
+		input [DATA_WIDTH-1:0]intc_data,
+		input intc_ready,
+		input intc_perr);
 	reg access_fault;
 	assign perr = sram_perr | uart_perr | system_perr | access_fault;
 
@@ -47,6 +53,8 @@ module APB
 			uart_enable = 0;
 			system_sel = 0;
 			system_enable = 0;
+			intc_sel = 0;
+			intc_enable = 0;
 			sram_sel = psel;
 			sram_enable = penable;
 			pready = sram_ready;
@@ -57,6 +65,8 @@ module APB
 			sram_enable = 0;
 			system_sel = 0;
 			system_enable = 0;
+			intc_sel = 0;
+			intc_enable = 0;
 			uart_sel = psel;
 			uart_enable = penable;
 			pready = uart_ready;
@@ -67,6 +77,8 @@ module APB
 			uart_enable = 0;
 			sram_sel = 0;
 			sram_enable = 0;
+			intc_sel = 0;
+			intc_enable = 0;
 			system_sel = psel;
 			system_enable = penable;
 			pready = system_ready;
@@ -79,6 +91,8 @@ module APB
 			uart_enable = 0;
 			sram_sel = 0;
 			sram_enable = 0;
+			intc_sel = 0;
+			intc_enable = 0;
 			pready = 0;
 			prdata = 0;
 		end

@@ -14,6 +14,8 @@ module soc_top
 	wire APB_pready;
 	wire APB_perr;
 
+	wire cpu_interrupt;
+
 	wire sram_sel;
 	wire sram_enable;
 	wire [DATA_WIDTH-1:0]sram_data;
@@ -32,16 +34,34 @@ module soc_top
 	wire system_ready;
 	wire system_perr;
 
+	wire intc_sel;
+	wire intc_enable;
+	wire [DATA_WIDTH-1:0]intc_data;
+	wire intc_ready;
+	wire intc_perr;
+
 initial begin
 	$dumpfile("soc.vcd");
 	$dumpvars(0, soc_top);
 end
 
-	cpu 	    riscv_cpu(clk,APB_paddr,APB_pdata,APB_prdata,APB_psel,APB_penable,APB_pwrite,APB_pstb,APB_pready,APB_perr,rts,halted,odat,oldpc);
-	APB 	      apb_bus(clk,APB_paddr,APB_pdata,APB_prdata,APB_psel,APB_penable,APB_pwrite,APB_pstb,APB_pready,APB_perr,sram_sel,sram_enable,sram_data,sram_ready,sram_perr,uart_sel,uart_enable,uart_data,uart_ready,uart_perr,system_sel,system_enable,system_data,system_ready,system_perr);
+	cpu	riscv_cpu(clk,APB_paddr,APB_pdata,APB_prdata,APB_psel,APB_penable,APB_pwrite,
+			  APB_pstb,APB_pready,APB_perr,cpu_interrupt,rts,halted,odat,oldpc);
+	APB	apb_bus(clk,APB_paddr,APB_pdata,APB_prdata,APB_psel,APB_penable,APB_pwrite,
+			APB_pstb,APB_pready,APB_perr,
+			sram_sel,sram_enable,sram_data,sram_ready,sram_perr,
+			uart_sel,uart_enable,uart_data,uart_ready,uart_perr,
+			system_sel,system_enable,system_data,system_ready,system_perr,
+			intc_sel,intc_enable,intc_data,intc_ready,intc_perr);
 
-	sram	    #(.FILE("test.vh"), .RAM_SIZE('h10000000))ram(clk,{1'b0,APB_paddr[30:0]},APB_pdata,sram_data,sram_sel,sram_enable,APB_pwrite,APB_pstb,sram_ready,sram_perr);
-	sram	    #(.FILE("system.vh"), .RAM_SIZE('h10000))system(clk,APB_paddr,APB_pdata,system_data,system_sel,system_enable,APB_pwrite,APB_pstb,system_ready,system_perr);
+	intctrl	interrupt_controller(clk,APB_paddr,APB_pdata,intc_data,intc_sel,intc_enable,
+				     APB_pwrite,APB_pstb,intc_ready,intc_perr,cpu_interrupt);
 
-	uart	    console(clk,APB_paddr,APB_pdata,uart_data,uart_sel,uart_enable,APB_pwrite,APB_pstb,uart_ready,uart_perr);
+	sram	#(.FILE("test.vh"), .RAM_SIZE('h10000000))ram(clk,{1'b0,APB_paddr[30:0]},APB_pdata,
+		sram_data,sram_sel,sram_enable,APB_pwrite,APB_pstb,sram_ready,sram_perr);
+	sram	#(.FILE("system.vh"), .RAM_SIZE('h10000))system(clk,APB_paddr,APB_pdata,system_data,
+		system_sel,system_enable,APB_pwrite,APB_pstb,system_ready,system_perr);
+
+	uart	console(clk,APB_paddr,APB_pdata,uart_data,uart_sel,uart_enable,APB_pwrite,
+			APB_pstb,uart_ready,uart_perr);
 endmodule

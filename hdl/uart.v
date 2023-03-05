@@ -17,7 +17,7 @@ module uart
 		output perr);
 assign prdata = (paddr == 32'h10000005)?32'h00000060:0;
 reg rderr = 0;
-assign perr = 0; //paddr[1] | paddr[0] |
+assign perr = 0;
 always @(posedge pclk) begin
 	if(psel && penable && !ready) begin
 		if (pwrite && paddr == 32'h10000000) begin
