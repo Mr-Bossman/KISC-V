@@ -34,9 +34,9 @@ $(BUILD_DIR)/%.o: %.S
 	$(CROSS_COMPILE)gcc $(CLFAGS) -c -o $@ -DTEST_FUNC_NAME=$(notdir $(<:.S=)) -DTEST_FUNC_TXT='"$(notdir $(<:.S=))"' -DTEST_FUNC_RET=$(notdir $(<:.S=))_ret $<
 
 tests.vh: $(OBJECTS) custom/start.S custom/linker.ld
-	$(CROSS_COMPILE)gcc $(CLFAGS)  -c  custom/start.S -o $(BUILD_DIR)/start.o
-	$(CROSS_COMPILE)gcc $(CLFAGS)  -Os -ffreestanding -nostdlib -Wl,-Bstatic,-T,custom/linker.ld $(BUILD_DIR)/start.o $(OBJECTS) -lgcc -o $(BUILD_DIR)/tests.elf
-	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 --reverse-bytes=4 -j .text -j .data $(BUILD_DIR)/tests.elf ../test.vh
+	$(CROSS_COMPILE)gcc $(CLFAGS) -c  custom/start.S -o $(BUILD_DIR)/start.o
+	$(CROSS_COMPILE)gcc $(CLFAGS) -Os -ffreestanding -nostdlib -Wl,-Bstatic,-T,custom/linker.ld $(BUILD_DIR)/start.o $(OBJECTS) -lgcc -o $(BUILD_DIR)/tests.elf
+	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 -j .text -j .data $(BUILD_DIR)/tests.elf ../test.vh
 	sed -i s/@.*//g ../test.vh
 
 clean:

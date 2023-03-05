@@ -48,6 +48,7 @@ void entry(void) {
 	uint32_t instr = *(CPUregs->pc-1);
 	uint32_t opcode = instr & 0x0000007f;
 	int ret = 0;
+	(void)ret; //TODO: use ret for error checking
 	/* Check for unimplemented instructions FENCE/FENCE.I ECALL/EBREAK CSRx and xMRET*/
 	switch(opcode) {
 		case 0x0F: // FENCE/FENCE.I
@@ -193,7 +194,7 @@ static int xRET(uint32_t instr) {
 	}
 	if(imm_i != 0x105) {
 		CSRs[csr_mstatus] = mstatus;
-		CPUregs->pc = CSRs[csr_mepc];
+		CPUregs->pc = (uint32_t*)CSRs[csr_mepc];
 	}
 	return 0;
 }
@@ -226,7 +227,12 @@ static int AMOx(uint32_t instr) {
 
 static inline void printC(uint8_t c){
 	static volatile uint8_t* const uart = (volatile uint8_t* const)0x10000000;
-	//*uart = c;
+#ifdef DEBUG_UART
+	*uart = c;
+#else
+	(void)c;
+	(void)uart;
+#endif
 }
 
 static void printS(const char* s) {
