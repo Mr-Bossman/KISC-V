@@ -140,10 +140,7 @@ end
 			microop <= 0;
 			halt <= 0;
 		end else if(!halt) begin
-			if(microop[23:16] == 0 && interrupt) begin
-				microop_pc <= microop_prog[3*8][23:16];
-				microop <= microop_prog[3*8];
-			end else if(load_insr) begin
+			if(load_insr) begin
 				instruction <= odata;
 				if(odata == 32'b0) halt <= 1;
 				microop_pc <= microop_prog[op_jmp][23:16];
@@ -151,8 +148,14 @@ end
 			end
 			// halt till APB_pready is ready
 			else if(!(APB_penable && APB_psel && !APB_pready)) begin
-				microop_pc <= microop_prog[microop_pc][23:16];
-				microop <= microop_prog[microop_pc];
+				/* Don't interrupt if we are in the interrupt handler */
+				if(microop[23:16] == 0 && interrupt && pc > 'h1000) begin
+					microop_pc <= microop_prog[3*8][23:16];
+					microop <= microop_prog[3*8];
+				end else begin
+					microop_pc <= microop_prog[microop_pc][23:16];
+					microop <= microop_prog[microop_pc];
+				end
 				if(microop[23:16] == 0) begin
 					instruction <= 0;
 					APB_paddr <= pc;

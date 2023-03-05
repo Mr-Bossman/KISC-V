@@ -1,6 +1,7 @@
 #include <stdint.h>
+//#define DEBUG_UART
 
-extern void _exit_(void);
+extern void _exit_(void) __attribute__((noreturn));
 
 struct cpu_regs {
 	uint32_t* pc;
@@ -51,10 +52,13 @@ void entry(void) {
 	int ret = 0;
 	(void)ret; //TODO: use ret for error checking
 	/* Check for unimplemented instructions FENCE/FENCE.I ECALL/EBREAK CSRx and xMRET*/
+	if(get_cause() == -1) {
+		return;
+	}
 	switch(opcode) {
 		case 0x0F: // FENCE/FENCE.I
 			ret = FENCE(instr);
-			printS("FENCE\n\r");
+			//printS("FENCE\n\r");
 			break;
 		case 0x73: { // ECALL/EBREAK // CSRRW/CSRRS/CSRRC/CSRRWI/CSRRSI/CSRRCI
 			uint32_t checkA = (instr&(~0x0010007F));
@@ -62,28 +66,28 @@ void entry(void) {
 			uint32_t checkC = (instr>>12)&3;
 			if(checkA == 0x0) { // ECALL/EBREAK
 				ret = ECALL(instr);
-				printS("ECALL\n\r");
+				//printS("ECALL\n\r");
 				break;
 			} else if(checkB == 0x0) { // xRET
 				ret = xRET(instr);
-				printS("xRET\n\r");
+				//printS("xRET\n\r");
 				break;
 			} else if (checkC != 4) {  // CSRRW/CSRRS/CSRRC/CSRRWI/CSRRSI/CSRRCI
 				ret = CSRx(instr);
-				printS("CSRx\n\r");
+				//printS("CSRx\n\r");
 				break;
 			}
 			ret = -1;
-			printS("Unimplemented\n\r");
+			//printS("Unimplemented\n\r");
 			break;
 		}
 		case 0x2F: // AMO
 			ret = AMOx(instr);
-			printS("AMOx\n\r");
+			//printS("AMOx\n\r");
 			break;
 		default:
 			ret = bad_instruction(instr);
-			printS("Bad_instruction\n\r");
+			//printS("Bad_instruction\n\r");
 			break;
 	}
 }
@@ -113,22 +117,31 @@ static int ECALL(uint32_t instr) {
 
 static int get_cause(void) {
 	static volatile uint32_t* const intc = (volatile uint32_t* const)0x20000000;
-	printS("INTC: ");
-	printH(intc[0]);
-	printS("\n\r");
-	intc[0] = 0;
+	if(intc[0]) {
+		if((intc[0]&2) != 0) {
+			CPUregs->pc -= 1;
+			//printS("\n\rTimer interrupt\n\r");
+			//printH((uint32_t)CPUregs->pc);
+			//printS("\n\r");
+		}
+		if((intc[0]&1) != 0) {
+			printS("\n\rAPB interrupt\n\r");
+			printH((uint32_t)CPUregs->pc-4);
+			printS(",");
+			printH(*(CPUregs->pc-1));
+			printS("\n\r");
+			while(1)_exit_();
+		}
+		intc[0] = 0;
+		return -1;
+	}
 	return 2;
 }
 
 static int bad_instruction(uint32_t instr) {
-	printS("PC: ");
-	printH((uint32_t)CPUregs->pc-4);
-	printS("\n\rInstr: ");
-	printH(instr);
-	printS("\n\r");
 	int mstatus = CSRs[csr_mstatus] ;
 	CSRs[csr_mepc] = ((uint32_t)CPUregs->pc)-4;
-	CSRs[csr_mcause] = get_cause(); // Bad instruction
+	CSRs[csr_mcause] = 2; // Bad instruction
 	CSRs[csr_mtval] = ((uint32_t)CPUregs->pc)-4; // ECALL?
 	CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
 	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~( 0x8 | (3 <<11))); // set move mie to mpie
@@ -166,9 +179,6 @@ static int CSRx(uint32_t instr) {
 	uint32_t microop = (instr >> 12) & 0x7;
 	uint32_t rs1imm = (instr >> 15) & 0x1f;
 	uint32_t* rsd = &CPUregs->regs[(instr >> 7) & 0x1f];
-	printS("CSRx: ");
-	printH(csr);
-	printS("\n\r");
 	if(!(microop>>2))
 		rs1imm = CPUregs->regs[rs1imm];
 	csrval = csr_rd(csr);
