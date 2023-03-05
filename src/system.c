@@ -1,5 +1,5 @@
 #include <stdint.h>
-//#define DEBUG_UART
+#define DEBUG_UART
 
 extern void _exit_(void) __attribute__((noreturn));
 
@@ -39,7 +39,11 @@ static int bad_instruction(uint32_t instr);
 static int csr_num(uint32_t csr);
 static void csr_wr(uint32_t csr, uint32_t val);
 static uint32_t csr_rd(uint32_t csr);
-static int get_cause(void);
+static inline uint32_t get_cause(void);
+
+static int do_timer_int(void);
+static int do_apb_bus_error(void);
+static int do_unknown_int(void);
 
 static inline void printC(uint8_t c);
 static void printS(const char* s);
@@ -50,9 +54,26 @@ void entry(void) {
 	uint32_t instr = *(CPUregs->pc-1);
 	uint32_t opcode = instr & 0x0000007f;
 	int ret = 0;
+	int cause;
 	(void)ret; //TODO: use ret for error checking
 	/* Check for unimplemented instructions FENCE/FENCE.I ECALL/EBREAK CSRx and xMRET*/
-	if(get_cause() == -1) {
+	if((cause = get_cause())) {
+		for(int i = 0;cause;i++) {
+			if(cause&1) {
+				switch(i) {
+					case 0: // APB bus error
+						ret = do_apb_bus_error();
+						break;
+					case 1: // Timer interrupt
+						ret = do_timer_int();
+						break;
+					default:
+						ret = do_unknown_int();
+						break;
+				}
+			}
+			cause>>=1;
+		}
 		return;
 	}
 	switch(opcode) {
@@ -113,29 +134,6 @@ static int ECALL(uint32_t instr) {
 		CSRs[csr_mstatus] = mstatus;
 	}
 	return 0;
-}
-
-static int get_cause(void) {
-	static volatile uint32_t* const intc = (volatile uint32_t* const)0x20000000;
-	if(intc[0]) {
-		if((intc[0]&2) != 0) {
-			CPUregs->pc -= 1;
-			//printS("\n\rTimer interrupt\n\r");
-			//printH((uint32_t)CPUregs->pc);
-			//printS("\n\r");
-		}
-		if((intc[0]&1) != 0) {
-			printS("\n\rAPB interrupt\n\r");
-			printH((uint32_t)CPUregs->pc-4);
-			printS(",");
-			printH(*(CPUregs->pc-1));
-			printS("\n\r");
-			while(1)_exit_();
-		}
-		intc[0] = 0;
-		return -1;
-	}
-	return 2;
 }
 
 static int bad_instruction(uint32_t instr) {
@@ -242,6 +240,37 @@ static int AMOx(uint32_t instr) {
 		default:
 			return -1;
 	}
+	return 0;
+}
+
+static inline uint32_t get_cause(void) {
+	static volatile uint32_t* const intc = (volatile uint32_t* const)0x20000000;
+	uint32_t cause = *intc;
+	*intc = 0;
+	return cause;
+}
+
+static int do_timer_int(void){
+	CPUregs->pc -= 1;
+	//printS("\n\rTimer interrupt\n\r");
+	//printH((uint32_t)CPUregs->pc);
+	//printS("\n\r");
+	return 0;
+}
+
+static int do_apb_bus_error(void) {
+	CPUregs->pc -= 1;
+	printS("APB error interrupt\n\r");
+	printH((uint32_t)CPUregs->pc);
+	printS("\n\r");
+	return 0;
+}
+
+static int do_unknown_int(void){
+	CPUregs->pc -= 1;
+	printS("\n\rUnknown interrupt\n\r");
+	printH((uint32_t)CPUregs->pc);
+	printS("\n\r");
 	return 0;
 }
 

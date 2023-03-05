@@ -1,4 +1,4 @@
-__stack_size = 0x800;
+__stack_size = 0x200;
 ENTRY(_start)
 
 SECTIONS
