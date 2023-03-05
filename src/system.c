@@ -38,6 +38,7 @@ static int bad_instruction(uint32_t instr);
 static int csr_num(uint32_t csr);
 static void csr_wr(uint32_t csr, uint32_t val);
 static uint32_t csr_rd(uint32_t csr);
+static int get_cause(void);
 
 static inline void printC(uint8_t c);
 static void printS(const char* s);
@@ -81,11 +82,6 @@ void entry(void) {
 			printS("AMOx\n\r");
 			break;
 		default:
-			printS("PC: ");
-			printH((uint32_t)CPUregs->pc);
-			printS("\n\rInstr: ");
-			printH(instr);
-			printS("\n\r");
 			ret = bad_instruction(instr);
 			printS("Bad_instruction\n\r");
 			break;
@@ -115,10 +111,24 @@ static int ECALL(uint32_t instr) {
 	return 0;
 }
 
+static int get_cause(void) {
+	static volatile uint32_t* const intc = (volatile uint32_t* const)0x20000000;
+	printS("INTC: ");
+	printH(intc[0]);
+	printS("\n\r");
+	intc[0] = 0;
+	return 2;
+}
+
 static int bad_instruction(uint32_t instr) {
+	printS("PC: ");
+	printH((uint32_t)CPUregs->pc-4);
+	printS("\n\rInstr: ");
+	printH(instr);
+	printS("\n\r");
 	int mstatus = CSRs[csr_mstatus] ;
 	CSRs[csr_mepc] = ((uint32_t)CPUregs->pc)-4;
-	CSRs[csr_mcause] = 2; // Bad instruction
+	CSRs[csr_mcause] = get_cause(); // Bad instruction
 	CSRs[csr_mtval] = ((uint32_t)CPUregs->pc)-4; // ECALL?
 	CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
 	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~( 0x8 | (3 <<11))); // set move mie to mpie

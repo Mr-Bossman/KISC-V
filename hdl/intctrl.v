@@ -15,10 +15,19 @@ module intctrl
 		input [3:0] pstb,
 		output pready,
 		output perr,
-		output cpu_interrupt);
+		output cpu_interrupt,
+		input APB_perr);
 
-	assign prdata = 0;
+	assign cpu_interrupt = APB_perr;
 	assign perr = 0;
-	assign pready = 0;
-	assign cpu_interrupt = 0;
+	always @(posedge pclk) begin
+		prdata <= prdata | {31'b0,APB_perr};
+		if(psel && penable && !pready) begin
+			if (pwrite && paddr == 32'h20000000) begin
+				prdata <= pdata;
+			end
+			pready <= 1;
+		end
+		else pready <= 0;
+	end
 endmodule

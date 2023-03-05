@@ -83,6 +83,18 @@ module APB
 			system_enable = penable;
 			pready = system_ready;
 			prdata = system_data;
+		end else if (paddr == 'h20000000) begin
+			access_fault = 0;
+			uart_sel = 0;
+			uart_enable = 0;
+			sram_sel = 0;
+			sram_enable = 0;
+			system_sel = 0;
+			system_enable = 0;
+			intc_sel = psel;
+			intc_enable = penable;
+			pready = intc_ready;
+			prdata = intc_data;
 		end else begin
 			access_fault = 1;
 			system_sel = 0;
@@ -93,7 +105,7 @@ module APB
 			sram_enable = 0;
 			intc_sel = 0;
 			intc_enable = 0;
-			pready = 0;
+			pready = 1; // if PERR then pready = 1
 			prdata = 0;
 		end
 	end

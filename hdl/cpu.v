@@ -86,7 +86,7 @@ end
 /* debug start */
 /* verilator lint_off UNUSEDSIGNAL */
 /* verilator lint_off WIDTH */
-	wire not_use = interrupt;
+	wire not_use = APB_perr;
 	assign odat = microop;
 /* verilator lint_on WIDTH */
 /* verilator lint_on UNUSEDSIGNAL */
@@ -140,9 +140,10 @@ end
 			microop <= 0;
 			halt <= 0;
 		end else if(!halt) begin
-			// TODO: do trap
-			if(APB_perr) halt <= 1;
-			if(load_insr) begin
+			if(microop[23:16] == 0 && interrupt) begin
+				microop_pc <= microop_prog[3*8][23:16];
+				microop <= microop_prog[3*8];
+			end else if(load_insr) begin
 				instruction <= odata;
 				if(odata == 32'b0) halt <= 1;
 				microop_pc <= microop_prog[op_jmp][23:16];

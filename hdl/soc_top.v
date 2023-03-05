@@ -55,7 +55,8 @@ end
 			intc_sel,intc_enable,intc_data,intc_ready,intc_perr);
 
 	intctrl	interrupt_controller(clk,APB_paddr,APB_pdata,intc_data,intc_sel,intc_enable,
-				     APB_pwrite,APB_pstb,intc_ready,intc_perr,cpu_interrupt);
+				     APB_pwrite,APB_pstb,intc_ready,intc_perr,
+				     cpu_interrupt,APB_perr);
 
 	sram	#(.FILE("test.vh"), .RAM_SIZE('h10000000))ram(clk,{1'b0,APB_paddr[30:0]},APB_pdata,
 		sram_data,sram_sel,sram_enable,APB_pwrite,APB_pstb,sram_ready,sram_perr);
