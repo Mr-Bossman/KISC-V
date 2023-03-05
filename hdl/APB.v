@@ -38,7 +38,13 @@ module APB
 		output reg intc_enable,
 		input [DATA_WIDTH-1:0]intc_data,
 		input intc_ready,
-		input intc_perr);
+		input intc_perr,
+
+		output reg timer_sel,
+		output reg timer_enable,
+		input [DATA_WIDTH-1:0]timer_data,
+		input timer_ready,
+		input timer_perr);
 	reg access_fault;
 	assign perr = sram_perr | uart_perr | system_perr | access_fault;
 
@@ -47,7 +53,7 @@ module APB
 	end
 
 	always_comb begin
-		if(paddr >= 'h80000000) begin
+		if(paddr >= 'h80000000) begin // SRAM
 			access_fault = 0;
 			uart_sel = 0;
 			uart_enable = 0;
@@ -55,11 +61,13 @@ module APB
 			system_enable = 0;
 			intc_sel = 0;
 			intc_enable = 0;
+			timer_sel = 0;
+			timer_enable = 0;
 			sram_sel = psel;
 			sram_enable = penable;
 			pready = sram_ready;
 			prdata = sram_data;
-		end else if (paddr >= 'h10000000 && paddr <= 'h12000000) begin
+		end else if (paddr >= 'h10000000 && paddr <= 'h10001000) begin // UART
 			access_fault = 0;
 			sram_sel = 0;
 			sram_enable = 0;
@@ -67,11 +75,27 @@ module APB
 			system_enable = 0;
 			intc_sel = 0;
 			intc_enable = 0;
+			timer_sel = 0;
+			timer_enable = 0;
 			uart_sel = psel;
 			uart_enable = penable;
 			pready = uart_ready;
 			prdata = uart_data;
-		end else if (paddr <= 'hffff)begin
+		end else if (paddr >= 'h11000000 && paddr <= 'h12000000) begin // Timer
+			access_fault = 0;
+			sram_sel = 0;
+			sram_enable = 0;
+			system_sel = 0;
+			system_enable = 0;
+			uart_sel = 0;
+			uart_enable = 0;
+			intc_sel = 0;
+			intc_enable = 0;
+			timer_sel = psel;
+			timer_enable = penable;
+			pready = timer_ready;
+			prdata = timer_data;
+		end else if (paddr <= 'hffff)begin // System ROM
 			access_fault = 0;
 			uart_sel = 0;
 			uart_enable = 0;
@@ -79,11 +103,13 @@ module APB
 			sram_enable = 0;
 			intc_sel = 0;
 			intc_enable = 0;
+			timer_sel = 0;
+			timer_enable = 0;
 			system_sel = psel;
 			system_enable = penable;
 			pready = system_ready;
 			prdata = system_data;
-		end else if (paddr == 'h20000000) begin
+		end else if (paddr == 'h20000000) begin // INTC
 			access_fault = 0;
 			uart_sel = 0;
 			uart_enable = 0;
@@ -91,11 +117,13 @@ module APB
 			sram_enable = 0;
 			system_sel = 0;
 			system_enable = 0;
+			timer_sel = 0;
+			timer_enable = 0;
 			intc_sel = psel;
 			intc_enable = penable;
 			pready = intc_ready;
 			prdata = intc_data;
-		end else begin
+		end else begin // Access fault
 			access_fault = 1;
 			system_sel = 0;
 			system_enable = 0;
@@ -105,6 +133,8 @@ module APB
 			sram_enable = 0;
 			intc_sel = 0;
 			intc_enable = 0;
+			timer_sel = 0;
+			timer_enable = 0;
 			pready = 1; // if PERR then pready = 1
 			prdata = 0;
 		end

@@ -40,6 +40,13 @@ module soc_top
 	wire intc_ready;
 	wire intc_perr;
 
+	wire timer_interrupt;
+	wire timer_sel;
+	wire timer_enable;
+	wire [DATA_WIDTH-1:0]timer_data;
+	wire timer_ready;
+	wire timer_perr;
+
 initial begin
 	$dumpfile("soc.vcd");
 	$dumpvars(0, soc_top);
@@ -52,11 +59,14 @@ end
 			sram_sel,sram_enable,sram_data,sram_ready,sram_perr,
 			uart_sel,uart_enable,uart_data,uart_ready,uart_perr,
 			system_sel,system_enable,system_data,system_ready,system_perr,
-			intc_sel,intc_enable,intc_data,intc_ready,intc_perr);
+			intc_sel,intc_enable,intc_data,intc_ready,intc_perr,
+			timer_sel,timer_enable,timer_data,timer_ready,timer_perr);
 
 	intctrl	interrupt_controller(clk,APB_paddr,APB_pdata,intc_data,intc_sel,intc_enable,
 				     APB_pwrite,APB_pstb,intc_ready,intc_perr,
-				     cpu_interrupt,APB_perr);
+				     cpu_interrupt,APB_perr,timer_interrupt);
+	timer	sys_timer(clk,APB_paddr,APB_pdata,timer_data,timer_sel,timer_enable,APB_pwrite,
+			  APB_pstb,timer_ready,timer_perr,timer_interrupt);
 
 	sram	#(.FILE("test.vh"), .RAM_SIZE('h10000000))ram(clk,{1'b0,APB_paddr[30:0]},APB_pdata,
 		sram_data,sram_sel,sram_enable,APB_pwrite,APB_pstb,sram_ready,sram_perr);
