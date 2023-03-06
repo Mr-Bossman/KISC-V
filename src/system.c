@@ -119,11 +119,13 @@ void entry(void) {
 			break;
 	}
 	{
+		static volatile uint32_t* const timer = (volatile uint32_t* const)0x11110000;
 		uint32_t MIE = (CSRs[csr_mstatus]&0x8) != 0;
 		uint32_t MTIE = (CSRs[csr_mie] & (1 << 7)) != 0;
 		if(MIE && MTIE){
-			static volatile uint32_t* const timer = (volatile uint32_t* const)0x11110000;
 			timer[0] = 0x1;
+		}else{
+			timer[0] = 0x0;
 		}
 	}
 }
@@ -210,16 +212,13 @@ static int xRET(uint32_t instr) {
 	uint32_t imm_i = (instr >> 20) & 0xfff;
 	int mstatus = CSRs[csr_mstatus] ;
 	switch(imm_i) {
-		case 0x002: // URET
-			// move mie to mpie and set mpie
-			mstatus = ((mstatus & 0x10) >> 4) | 0x10 | (mstatus & ~(3 << 11));
-			break;
 		case 0x302: // MRET
 			// move mie to mpie and set mpie
 			mstatus |= ((mstatus & 0x80) >> 4) | 0x80 | (mstatus & ~(3 << 11));
 			break;
 		case 0x105: // WFI
 			break;
+		case 0x002: // URET
 		case 0x102: // SRET
 		case 0x202: // HRET
 		default:
@@ -269,6 +268,12 @@ static int do_timer_int(void){
 	static volatile uint32_t* const timer = (volatile uint32_t* const)0x11110000;
 	*timer = 0x0; // Clear timer interrupt
 	get_cause(); // Clear global interrupt
+	uint32_t MIE = (CSRs[csr_mstatus]&0x8) != 0;
+	uint32_t MTIE = (CSRs[csr_mie] & (1 << 7)) != 0;
+	if(!(MIE && MTIE)) {
+		CPUregs->pc -= 1;
+		return 0;
+	}
 	int mstatus = CSRs[csr_mstatus] ;
 	CSRs[csr_mepc] = ((uint32_t)CPUregs->pc) - 4;
 	CSRs[csr_mcause] = 0x80000007; // Timer interrupt
