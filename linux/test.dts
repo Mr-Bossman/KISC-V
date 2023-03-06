@@ -12,38 +12,29 @@
 
 	memory@80000000 {
 		device_type = "memory";
-		reg = <0x00 0x80000000 0x00 0x3ffc000>;
+		reg = <0x00 0x80000000 0x00 0x4000000>; // 64MB
 	};
 
 	cpus {
 		#address-cells = <0x01>;
 		#size-cells = <0x00>;
-		timebase-frequency = <0xf4240>;
+		/* sys timer is in Hz */
+		timebase-frequency = <1000000>;
 
 		cpu@0 {
-			phandle = <0x01>;
-			device_type = "cpu";
 			reg = <0x00>;
+			device_type = "cpu";
 			status = "okay";
 			compatible = "riscv";
 			riscv,isa = "rv32ima";
 			mmu-type = "riscv,none";
 
-			interrupt-controller {
+			intc: interrupt-controller {
 				#interrupt-cells = <0x01>;
+				#address-cells = <0x01>;
 				interrupt-controller;
 				compatible = "riscv,cpu-intc";
 				phandle = <0x02>;
-			};
-		};
-
-		cpu-map {
-
-			cluster0 {
-
-				core0 {
-					cpu = <0x01>;
-				};
 			};
 		};
 	};
@@ -60,30 +51,11 @@
 			compatible = "ns16850";
 		};
 
-		poweroff {
-			value = <0x5555>;
-			offset = <0x00>;
-			regmap = <0x04>;
-			compatible = "syscon-poweroff";
-		};
-
-		reboot {
-			value = <0x7777>;
-			offset = <0x00>;
-			regmap = <0x04>;
-			compatible = "syscon-reboot";
-		};
-
-		syscon@11100000 {
-			phandle = <0x04>;
-			reg = <0x00 0x11100000 0x00 0x1000>;
-			compatible = "syscon";
-		};
-
 		clint@11000000 {
-			interrupts-extended = <0x02 0x03 0x02 0x07>;
+			interrupts-extended = <&intc 0x03>,
+					      <&intc 0x07>;
 			reg = <0x00 0x11000000 0x00 0x10000>;
-			compatible = "sifive,clint0\0riscv,clint0";
+			compatible = "riscv,clint0";
 		};
 	};
 };

@@ -46,10 +46,12 @@ system: src/system.S src/system.c src/system.lds
 	sed -i s/@.*//g system.vh
 
 testkern: all
-	$(CROSS_COMPILE)objcopy -Obinary linux/vmlinux test.bin
-	truncate -s 16777216 test.bin # 0x1000000
-	cat linux/test.dtb >> test.bin
-	$(CROSS_COMPILE)objcopy -Ibinary -O verilog --verilog-data-width=4 --reverse-bytes=4 test.bin test.vh
+	dtc -I dts -O dtb -o $(BUILD_DIR)/test.dtb linux/test.dts
+	$(CROSS_COMPILE)objcopy -Obinary linux/vmlinux $(BUILD_DIR)/test.bin
+	truncate -s 2048 $(BUILD_DIR)/test.dtb # 0x800 round up to multiple of 4
+	truncate -s 16777216 $(BUILD_DIR)/test.bin # 0x1000000
+	cat $(BUILD_DIR)/test.dtb >> $(BUILD_DIR)/test.bin
+	$(CROSS_COMPILE)objcopy -Ibinary -O verilog --verilog-data-width=4 --reverse-bytes=4 $(BUILD_DIR)/test.bin test.vh
 
 clean_exe:
 	rm -rf $(PREFIX_NAME)
