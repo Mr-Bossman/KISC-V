@@ -15,10 +15,13 @@ module timer
 		input [3:0] pstb,
 		output pready,
 		output perr,
-		output reg timer_interrupt);
+		output timer_int);
 	assign perr = 0;
+	reg int_en = 0;
 	reg [63:0]wall_clock = 0;
-	reg [63:0]timer_match = 64'hffffffffffffffff;
+	reg [63:0]timer_match = 0;
+	reg timer_interrupt = 0;
+	assign timer_int = timer_interrupt & int_en;
 
 	always_comb begin
 		if(paddr  == 'h1100bffc) begin
@@ -34,9 +37,11 @@ module timer
 		if(psel && penable && !pready) begin
 			if (pwrite) begin
 				if(paddr == 'h11004004) begin
-					timer_match <= {timer_match[63:32],pdata};
-				end else if (paddr == 'h11004000) begin
 					timer_match <= {pdata,timer_match[31:0]};
+				end else if (paddr == 'h11004000) begin
+					timer_match <= {timer_match[63:32],pdata};
+				end else if (paddr == 'h11110000) begin
+					int_en <= pdata[0];
 				end
 			end
 			pready <= 1;
@@ -44,13 +49,24 @@ module timer
 		else pready <= 0;
 	end
 
+	reg [32:0]tick_clock = 0;
+	reg tick = 0;
 	always @(posedge pclk) begin
-		if(wall_clock == timer_match) begin
+		if(tick_clock == 1000)begin
+			tick <= 1;
+			tick_clock <= 0;
+		end else begin
+			tick <= 0;
+			tick_clock <= tick_clock + 1;
+		end
+	end
+
+	always @(posedge tick) begin
+		if(wall_clock >= timer_match) begin
 			timer_interrupt <= 1;
-			wall_clock <= 0;
+		end else begin
+			timer_interrupt <= 0;
 		end
-		else begin
-			wall_clock <= wall_clock + 1;
-		end
+		wall_clock <= wall_clock + 1;
 	end
 endmodule

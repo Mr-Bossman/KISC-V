@@ -24,6 +24,13 @@ enum {
 	csr_mcause,
 	csr_mvendorid,
 	csr_misa,
+	csr_pc,
+	csr_extraflags,
+	csr_cycleh,
+	csr_timerl,
+	csr_timerh,
+	csr_timermatchl,
+	csr_timermatchh,
 };
 
 static const uint32_t csrnums[18] = {0x300,0xC00,0x340,0x305,0x304,0x344,0x341,0x343,0x342,0xf11,0x301};
@@ -110,6 +117,14 @@ void entry(void) {
 			ret = bad_instruction(instr);
 			//printS("Bad_instruction\n\r");
 			break;
+	}
+	{
+		uint32_t MIE = (CSRs[csr_mstatus]&0x8) != 0;
+		uint32_t MTIE = (CSRs[csr_mie] & (1 << 7)) != 0;
+		if(MIE && MTIE){
+			static volatile uint32_t* const timer = (volatile uint32_t* const)0x11110000;
+			timer[0] = 0x1;
+		}
 	}
 }
 
@@ -251,18 +266,27 @@ static inline uint32_t get_cause(void) {
 }
 
 static int do_timer_int(void){
-	CPUregs->pc -= 1;
-	//printS("\n\rTimer interrupt\n\r");
-	//printH((uint32_t)CPUregs->pc);
-	//printS("\n\r");
+	static volatile uint32_t* const timer = (volatile uint32_t* const)0x11110000;
+	*timer = 0x0; // Clear timer interrupt
+	get_cause(); // Clear global interrupt
+	int mstatus = CSRs[csr_mstatus] ;
+	CSRs[csr_mepc] = ((uint32_t)CPUregs->pc) - 4;
+	CSRs[csr_mcause] = 0x80000007; // Timer interrupt
+	CSRs[csr_mtval] = 0x0;
+	CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
+	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8); // set move mie to mpie
+	CSRs[csr_mstatus] = mstatus;
 	return 0;
 }
 
 static int do_apb_bus_error(void) {
-	CPUregs->pc -= 1;
-	printS("APB error interrupt\n\r");
-	printH((uint32_t)CPUregs->pc);
-	printS("\n\r");
+	int mstatus = CSRs[csr_mstatus] ;
+	CSRs[csr_mepc] = ((uint32_t)CPUregs->pc) - 4;
+	CSRs[csr_mcause] = 5; // Load access fault
+	CSRs[csr_mtval] = 0x0;
+	CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
+	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8); // set move mie to mpie
+	CSRs[csr_mstatus] = mstatus;
 	return 0;
 }
 
