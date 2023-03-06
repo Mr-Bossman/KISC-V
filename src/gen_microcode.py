@@ -26,7 +26,7 @@ LOADINS = [Micro_ops.APB_PSEL,
 	   Micro_ops.APB_PSEL | Micro_ops.APB_PEN | Micro_ops.LOAD_ISR,
 	   Micro_ops.NOP]
 
-STORE = [Micro_ops.MEM_ACCESS,
+STORE = [Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
 	 Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
          Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE | Micro_ops.APB_PEN,Micro_ops.NOP]
 
