@@ -2,7 +2,7 @@ module soc_top
 	#(parameter ADDR_WIDTH = 32,
 	  parameter DATA_WIDTH = 32)
 	(input clk, input rts,output halted,
-	output [31:0]odat,output [31:0] oldpc);
+	output [31:0]odat,output [31:0] oldpc, input [7:0]char_in,output read);
 
 	wire [ADDR_WIDTH-1:0] APB_paddr;
 	wire [DATA_WIDTH-1:0] APB_pdata;
@@ -74,5 +74,5 @@ end
 		system_sel,system_enable,APB_pwrite,APB_pstb,system_ready,system_perr);
 
 	uart	console(clk,APB_paddr,APB_pdata,uart_data,uart_sel,uart_enable,APB_pwrite,
-			APB_pstb,uart_ready,uart_perr);
+			APB_pstb,uart_ready,uart_perr,char_in,read);
 endmodule

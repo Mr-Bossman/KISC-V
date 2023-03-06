@@ -7,6 +7,7 @@
 #include <iostream>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
 static uint64_t instruction_count = 0;
 static uint64_t clock_count = 0;
@@ -36,6 +37,18 @@ static void dump(){
 	fclose(fp);
 }
 
+char get_console() {
+	int byteswaiting, rread;
+	char rxchar = 0;
+	/* Are there pending bytes */
+	ioctl(0, FIONREAD, &byteswaiting);
+	if(byteswaiting){
+		rread = read(0, &rxchar, 1);
+		return (rread > 0)?rxchar:-1;
+	}
+	return 0;
+}
+
 int main(int argc, char **argv, char **env) {
 	signal(SIGINT, exit_now);
 	Verilated::commandArgs(argc, argv);
@@ -46,14 +59,24 @@ int main(int argc, char **argv, char **env) {
 	sim->eval();
 	sim->rts = 0;
 	uint32_t oldpc = sim->oldpc;
+	char char_in = 0;
+	bool read = false;
 	while(!sim->halted){
 		//printf("microop_pc 0x%0x pc: 0x%0x\n",sim->odat,sim->oldpc);
 		//usleep(50000);
+		sim->char_in = char_in;
 		sim->clk = 0;
 		sim->eval();
+		sim->char_in = char_in;
 		sim->clk = 1;
 		sim->eval();
+		if(sim->read)
+			read = true;
 		if(sim->oldpc != oldpc){
+			if(read || char_in == 0){
+				char_in = get_console();
+				read = false;
+			}
 			//printf("pc: 0x%0x\n",sim->oldpc);
 			oldpc = sim->oldpc;
 			instruction_count++;
