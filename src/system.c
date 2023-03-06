@@ -54,7 +54,6 @@ static int do_unknown_int(void);
 
 static inline void printC(uint8_t c);
 static void printS(const char* s);
-static void printI(int i);
 static void printH(uint32_t i);
 
 void entry(void) {
@@ -144,10 +143,10 @@ static int ECALL(uint32_t instr) {
 	if(instr == 0x00000073) {
 		int mstatus = CSRs[csr_mstatus] ;
 		CSRs[csr_mepc] = ((uint32_t)CPUregs->pc)-4;
-		CSRs[csr_mcause] = (mstatus & (3<<11))?11:8; // ECALL?
-		CSRs[csr_mtval] = 0x0; // ECALL?
+		CSRs[csr_mcause] = (mstatus & (3<<11))?11:8; // ECALL
+		CSRs[csr_mtval] = 0x0; // ECALL
 		CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
-		mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8); // set move mie to mpie
+		mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8); // move mie to mpie
 		CSRs[csr_mstatus] = mstatus;
 	}
 	return 0;
@@ -157,9 +156,9 @@ static int bad_instruction(uint32_t instr) {
 	int mstatus = CSRs[csr_mstatus] ;
 	CSRs[csr_mepc] = ((uint32_t)CPUregs->pc)-4;
 	CSRs[csr_mcause] = 2; // Bad instruction
-	CSRs[csr_mtval] = ((uint32_t)CPUregs->pc)-4; // ECALL?
+	CSRs[csr_mtval] = ((uint32_t)CPUregs->pc)-4;
 	CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
-	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~( 0x8 | (3 <<11))); // set move mie to mpie
+	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8); // move mie to mpie
 	CSRs[csr_mstatus] = mstatus;
 	return 0;
 }
@@ -279,7 +278,7 @@ static int do_timer_int(void){
 	CSRs[csr_mcause] = 0x80000007; // Timer interrupt
 	CSRs[csr_mtval] = 0x0;
 	CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
-	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8); // set move mie to mpie
+	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8); // move mie to mpie
 	CSRs[csr_mstatus] = mstatus;
 	return 0;
 }
@@ -290,7 +289,7 @@ static int do_apb_bus_error(void) {
 	CSRs[csr_mcause] = 5; // Load access fault
 	CSRs[csr_mtval] = 0x0;
 	CPUregs->pc = (uint32_t*)CSRs[csr_mtvec];
-	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8); // set move mie to mpie
+	mstatus = ((mstatus & 0x8) << 4) | (mstatus & ~0x8); // move mie to mpie
 	CSRs[csr_mstatus] = mstatus;
 	return 0;
 }
@@ -316,21 +315,6 @@ static inline void printC(uint8_t c){
 static void printS(const char* s) {
 	while(*s)
 		printC(*s++);
-}
-
-static void printI(int i) {
-	static char s[12];
-	int j = 0;
-	if(i < 0) {
-		printC('-');
-		i = -i;
-	}
-	do {
-		s[j++] = '0' + (i % 10);
-		i /= 10;
-	} while(i);
-	while(j)
-		printC(s[--j]);
 }
 
 static void printH(uint32_t i) {
