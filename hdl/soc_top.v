@@ -68,7 +68,7 @@ end
 	timer	sys_timer(clk,APB_paddr,APB_pdata,timer_data,timer_sel,timer_enable,APB_pwrite,
 			  APB_pstb,timer_ready,timer_perr,timer_interrupt);
 
-	sram	#(.FILE("test.vh"), .RAM_SIZE('h10000000))ram(clk,{1'b0,APB_paddr[30:0]},APB_pdata,
+	sram	#(.FILE("test.vh"), .RAM_SIZE('h1000000))ram(clk,{1'b0,APB_paddr[30:0]},APB_pdata,
 		sram_data,sram_sel,sram_enable,APB_pwrite,APB_pstb,sram_ready,sram_perr);
 	sram	#(.FILE("system.vh"), .RAM_SIZE('h10000))system(clk,APB_paddr,APB_pdata,system_data,
 		system_sel,system_enable,APB_pwrite,APB_pstb,system_ready,system_perr);
