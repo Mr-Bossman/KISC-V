@@ -109,7 +109,7 @@ module APB
 			system_enable = penable;
 			pready = system_ready;
 			prdata = system_data;
-		end else if (paddr == 'h20000000) begin // INTC
+		end else if (paddr == 'h20000000 || paddr == 'h20000004) begin // INTC
 			access_fault = 0;
 			uart_sel = 0;
 			uart_enable = 0;

@@ -15,13 +15,10 @@ module timer
 		input [3:0] pstb,
 		output pready,
 		output perr,
-		output timer_int);
+		output reg timer_interrupt);
 	assign perr = 0;
-	reg int_en = 0;
 	reg [63:0]wall_clock = 0;
 	reg [63:0]timer_match = 0;
-	reg timer_interrupt = 0;
-	assign timer_int = timer_interrupt & int_en;
 
 	always_comb begin
 		if(paddr  == 'h1100bffc) begin
@@ -40,8 +37,6 @@ module timer
 					timer_match <= {pdata,timer_match[31:0]};
 				end else if (paddr == 'h11004000) begin
 					timer_match <= {timer_match[63:32],pdata};
-				end else if (paddr == 'h11110000) begin
-					int_en <= pdata[0];
 				end
 			end
 			pready <= 1;

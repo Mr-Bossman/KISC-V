@@ -11,6 +11,7 @@ struct cpu_regs {
 };
 
 static struct cpu_regs* const CPUregs = (struct cpu_regs* const)4;
+static volatile uint32_t* const intc = (volatile uint32_t* const)0x20000000;
 
 enum {
 	csr_mstatus,
@@ -33,8 +34,8 @@ enum {
 	csr_timermatchh,
 };
 
-static const uint32_t csrnums[18] = {0x300,0xC00,0x340,0x305,0x304,0x344,0x341,0x343,0x342,0xf11,0x301};
-volatile uint32_t CSRs[sizeof(csrnums)]  = {0};
+static const uint16_t csrnums[18] = {0x300,0xC00,0x340,0x305,0x304,0x344,0x341,0x343,0x342,0xf11,0x301};
+volatile uint32_t CSRs[sizeof(csrnums)/sizeof(*csrnums)]  = {0};
 
 static int xRET(uint32_t instr);
 static int FENCE(uint32_t instr);
@@ -47,6 +48,8 @@ static int csr_num(uint32_t csr);
 static void csr_wr(uint32_t csr, uint32_t val);
 static uint32_t csr_rd(uint32_t csr);
 static inline uint32_t get_cause(void);
+static inline void mask_int(uint32_t cause);
+static inline void clear_int(uint32_t cause);
 
 static int do_timer_int(void);
 static int do_apb_bus_error(void);
@@ -118,13 +121,13 @@ void entry(void) {
 			break;
 	}
 	{
-		static volatile uint32_t* const timer = (volatile uint32_t* const)0x11110000;
 		uint32_t MIE = (CSRs[csr_mstatus]&0x8) != 0;
 		uint32_t MTIE = (CSRs[csr_mie] & (1 << 7)) != 0;
 		if(MIE && MTIE){
-			timer[0] = 0x1;
-		}else{
-			timer[0] = 0x0;
+			mask_int(2); // Enable timer interrupt
+		} else {
+			mask_int(0); // Disable timer interrupt
+			clear_int(2); // Clear timer interrupt
 		}
 	}
 }
@@ -257,16 +260,20 @@ static int AMOx(uint32_t instr) {
 }
 
 static inline uint32_t get_cause(void) {
-	static volatile uint32_t* const intc = (volatile uint32_t* const)0x20000000;
-	uint32_t cause = *intc;
-	*intc = 0;
-	return cause;
+	return intc[0] & intc[1];
+}
+
+static inline void mask_int(uint32_t cause){
+	intc[1] = cause;
+}
+
+static inline void clear_int(uint32_t cause){
+	intc[0] = cause;
 }
 
 static int do_timer_int(void){
-	static volatile uint32_t* const timer = (volatile uint32_t* const)0x11110000;
-	*timer = 0x0; // Clear timer interrupt
-	get_cause(); // Clear global interrupt
+	mask_int(0); // Mask timer interrupt
+	clear_int(2); // Clear timer interrupt
 	uint32_t MIE = (CSRs[csr_mstatus]&0x8) != 0;
 	uint32_t MTIE = (CSRs[csr_mie] & (1 << 7)) != 0;
 	if(!(MIE && MTIE)) {

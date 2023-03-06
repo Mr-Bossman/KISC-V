@@ -18,18 +18,32 @@ module intctrl
 		output reg cpu_interrupt,
 		input APB_perr,
 		input timer_int);
+	reg [31:0] int_mask = 0;
+	reg [31:0] int_clear = 0;
+	reg [31:0] peding_int = 0;
 
-	reg peding_int = 0;
-	assign cpu_interrupt = APB_perr | timer_int | peding_int;
+	/* APB is non-maskable interrupt */
+	assign cpu_interrupt = ((peding_int & int_mask) != 0) || APB_perr;
 	assign perr = 0;
+	always_comb begin
+		if(paddr  == 'h20000000) begin
+			prdata = peding_int;
+		end else if (paddr == 'h20000004) begin
+			prdata = int_mask;
+		end else begin
+			prdata = 32'h0;
+		end
+	end
 
 	always @(posedge pclk) begin
-		prdata <= prdata | {30'b0,timer_int,APB_perr};
-		peding_int <= peding_int | timer_int | peding_int;
+		peding_int <= peding_int | {30'b0,timer_int,APB_perr};
 		if(psel && penable && !pready) begin
-			if (pwrite && paddr == 32'h20000000) begin
-				prdata <= pdata;
-				peding_int <= 0;
+			if (pwrite) begin
+				if(paddr == 32'h20000000) begin
+				peding_int <= peding_int & ~pdata;
+				end else if (paddr == 'h20000004) begin
+					int_mask <= pdata;
+				end
 			end
 			pready <= 1;
 		end
