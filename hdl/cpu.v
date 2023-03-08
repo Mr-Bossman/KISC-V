@@ -15,7 +15,10 @@ module cpu
 	input rts, output halted,
 	output [31:0]odat,output reg [31:0] oldpc);
 	reg [31:0] pc;
+	/* We dont use ra0 or ra1 */
+	/* verilator lint_off UNUSEDSIGNAL */
 	reg [31:0] instruction;
+	/* verilator lint_on UNUSEDSIGNAL */
 	reg [31:0] systmp;
 	reg halt = 0;
 	assign halted = halt;
@@ -24,17 +27,14 @@ module cpu
 	wire [4:0]ra0;
 	wire [4:0]ra1;
 	wire [4:0]wa;
-	wire [31:0]rd0;
-	wire [31:0]rd1;
+	reg [31:0]rd0;
+	reg [31:0]rd1;
 	reg [31:0] regfile[31:0];
-
-	assign rd0 = ra0 == 5'b0 ? 0 : regfile[ra0];
-	assign rd1 = ra1 == 5'b0 ? 0 : regfile[ra1];
 /* Regfile end*/
-
-	reg [7:0] microop_pc = 0;
-	reg [23:0] microop_prog[0:128];
-	reg [23:0] microop;
+	reg[6:0] op_jmp;
+	reg [22:0] microop_prog[0:71];
+	reg [22:0] microop;
+	wire [6:0] microop_pc = microop[22:16];
 
 	wire [31:0] alu_out;
 
@@ -56,16 +56,21 @@ module cpu
 	wire sys_load = microop[7];
 	wire store_alu = microop[8];
 	/* These happen in the same cycle as load_insr */
+/*
 	wire lui_flag = (load_insr)?microop_prog[op_jmp][9]:0;
 	wire jal_flag = (load_insr)?microop_prog[op_jmp][10]:0;
+*/
+	/* Microcode reads need to be synchronous */
+	wire lui_flag = (load_insr && op_jmp == (7*8));
+	wire jal_flag = (load_insr && op_jmp == (8*8));
 	wire cmp_flag;
 /* flags end */
 initial begin
 	$readmemh("microop.vh", microop_prog);
 end
 
-	assign ra0 = instruction[19:15];
-	assign ra1 = instruction[24:20];
+	assign ra0 = odata[19:15];
+	assign ra1 = odata[24:20];
 	assign wa = instruction[11:7];
 	wire [6:0] op = instruction[6:0];
 	wire [2:0] sub_op = instruction[14:12];
@@ -99,7 +104,6 @@ end
 	wire [31:0] imm_u = {odata[31:12], 12'b0};
 
 /* Decode instruction groups start */
-	reg[7:0] op_jmp;
 	always_comb begin
 		casez (odata[6:0])
 			7'b0100011: begin // STORE
@@ -133,7 +137,7 @@ end
 	end
 /* Decode instruction groups end */
 
-	always @(posedge clk or posedge rts) begin
+	always @(posedge clk) begin
 		if(rts) begin
 			pc <= 0;
 			APB_paddr <= 0;
@@ -143,20 +147,19 @@ end
 			if(load_insr) begin
 				instruction <= odata;
 				if(odata == 32'b0) halt <= 1;
-				microop_pc <= microop_prog[op_jmp][23:16];
 				microop <= microop_prog[op_jmp];
+				rd0 <= ra0 == 5'b0 ? 0 : regfile[ra0];
+				rd1 <= ra1 == 5'b0 ? 0 : regfile[ra1];
 			end
 			// halt till APB_pready is ready
 			else if(!(APB_penable && APB_psel && !APB_pready)) begin
 				/* Don't interrupt if we are in the interrupt handler */
-				if(microop[23:16] == 0 && interrupt && pc > 'h1000) begin
-					microop_pc <= microop_prog[3*8][23:16];
+				if(microop_pc == 0 && interrupt && pc > 'h1000) begin
 					microop <= microop_prog[3*8];
 				end else begin
-					microop_pc <= microop_prog[microop_pc][23:16];
 					microop <= microop_prog[microop_pc];
 				end
-				if(microop[23:16] == 0) begin
+				if(microop_pc == 0) begin
 					instruction <= 0;
 					APB_paddr <= pc;
 					pc <= pc + 4;
