@@ -4,7 +4,7 @@ TARGET_CC = $(CROSS_COMPILE)gcc
 CC = gcc
 TARGET_LD = $(CROSS_COMPILE)ld
 CXX = g++
-CPPFLAGS = -DVPREFIX=$(PREFIX_NAME) -Og
+CPPFLAGS = -DVPREFIX=$(PREFIX_NAME) -O3
 LDFLAGS =
 CPP_SOURCES = src/test.cpp
 V_SOURCES = hdl/sram.v hdl/cpu.v hdl/alu.v hdl/APB.v hdl/uart.v hdl/soc_top.v hdl/intctrl.v hdl/timer.v
