@@ -23,6 +23,12 @@ module cpu
 	reg halt = 0;
 	assign halted = halt;
 
+/* ALU start */
+	wire [31:0] alu_out;
+	reg [31:0] aluRB;
+	reg [3:0] alu_op;
+/* ALU end */
+
 /* Regfile start*/
 	wire [4:0]ra0;
 	wire [4:0]ra1;
@@ -31,12 +37,17 @@ module cpu
 	reg [31:0]rd1;
 	reg [31:0] regfile[31:0];
 /* Regfile end*/
+
+/* Microcode start */
 	reg[3:0] op_jmp;
 	reg [22:0] microop_prog[0:71];
 	reg [22:0] microop;
 	wire [6:0] microop_pc = microop[22:16];
-
-	wire [31:0] alu_out;
+	reg [6:0] microop_addr;
+initial begin
+	$readmemh("microop.vh", microop_prog);
+end
+/* Microcode end */
 
 /* AHB start */
 	assign APB_psel = microop[0];
@@ -48,6 +59,7 @@ module cpu
 
 	reg [31:0] odata;
 /* AHB end */
+
 /* flags start */
 	wire load_insr = microop[3];
 	wire mem_access = microop[4];
@@ -65,10 +77,10 @@ module cpu
 	wire jal_flag = (load_insr && op_jmp == (8));
 	wire cmp_flag;
 /* flags end */
-initial begin
-	$readmemh("microop.vh", microop_prog);
-end
 
+/* Instruction operands start */
+	wire [31:0] imm_j = {{12{odata[31]}}, odata[19:12], odata[20], odata[30:21], 1'b0};
+	wire [31:0] imm_u = {odata[31:12], 12'b0};
 	assign ra0 = odata[19:15];
 	assign ra1 = odata[24:20];
 	assign wa = instruction[11:7];
@@ -77,6 +89,7 @@ end
 	wire [31:0] imm_s = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
 	wire [31:0] imm_i = {{21{instruction[31]}}, instruction[30:20]};
 	wire [31:0] imm_b = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+/* Instruction operands end */
 
 /* READ byte mask start */
 	integer i;
@@ -96,12 +109,28 @@ end
 /* verilator lint_on WIDTH */
 /* verilator lint_on UNUSEDSIGNAL */
 /* debug end */
-	wire ex_alu = (sub_op == 5 || op == 7'b0110011)?instruction[30]:0; // use extra ops for SRAI/SRA and non-imm(sub/add)
-	// use add imm for 1100111 AKA JALR
-	alu alu({ex_alu,sub_op},rd0,(instruction[5] && op != 7'b1100111)?rd1:imm_i,alu_out,cmp_flag);
 
-	wire [31:0] imm_j = {{12{odata[31]}}, odata[19:12], odata[20], odata[30:21], 1'b0};
-	wire [31:0] imm_u = {odata[31:12], 12'b0};
+/* ALU decode start */
+	always_comb begin
+		// use add imm for 1100111 AKA JALR
+		if(instruction[5] && op != 7'b1100111 && !mem_access)
+			aluRB = rd1;
+		else if (APB_pwrite)
+			aluRB = imm_s;
+		else
+			aluRB = imm_i;
+
+		// use extra ops for SRAI/SRA and non-imm(sub/add)
+		if (mem_access)
+			alu_op = 4'b0000;
+		else if (sub_op == 5 || op == 7'b0110011)
+			alu_op = {instruction[30],sub_op};
+		else
+			alu_op = {1'b0,sub_op};
+
+	end
+	alu alu(alu_op,rd0,aluRB,alu_out,cmp_flag);
+/* ALU decode end */
 
 /* Decode instruction groups start */
 	always_comb begin
@@ -135,8 +164,33 @@ end
 			end
 		endcase
 	end
+
+/* Microop PC start */
+	always_comb begin
+		if(load_insr)
+			microop_addr = {op_jmp,3'b0};
+		/* Don't interrupt if we are in the interrupt handler */
+		else if(microop_pc == 0 && interrupt && pc > 'h1000)
+			microop_addr = 3*8; // System
+		else
+			microop_addr = microop_pc;
+	end
+/* Microop PC end */
 /* Decode instruction groups end */
 
+/* LUI/AUIPC/JAL start */
+	reg [31:0] LAJ_val;
+	always_comb begin
+		if(lui_flag && odata[5])
+			LAJ_val = imm_u;
+		else if(jal_flag)
+			LAJ_val = oldpc + imm_j;
+		else
+			LAJ_val = oldpc + imm_u;
+	end
+/* LUI/AUIPC/JAL end */
+
+/* CPU start */
 	always @(posedge clk) begin
 		if(rts) begin
 			pc <= 0;
@@ -147,28 +201,23 @@ end
 			if(load_insr) begin
 				instruction <= odata;
 				if(odata == 32'b0) halt <= 1;
-				microop <= microop_prog[{op_jmp,3'b0}];
+				microop <= microop_prog[microop_addr];
 				if(lui_flag) begin
-					regfile[odata[11:7]] <= imm_u + ((odata[5])?0:pc-4);
+					regfile[odata[11:7]] <= LAJ_val;
 				end
-				/* TODO: not working */
 				else if(jal_flag) begin
 					regfile[odata[11:7]] <= pc;
-					pc <= pc + imm_j - 4;
+					pc <= LAJ_val;
 				end else begin
 					rd0 <= ra0 == 5'b0 ? 0 : regfile[ra0];
 					rd1 <= ra1 == 5'b0 ? 0 : regfile[ra1];
 				end
 			end
+			// TODO: halt everywhere
 			// halt till APB_pready is ready
 			else begin
 				if(!(APB_penable && APB_psel && !APB_pready)) begin
-					/* Don't interrupt if we are in the interrupt handler */
-					if(microop_pc == 0 && interrupt && pc > 'h1000) begin
-						microop <= microop_prog[3*8];
-					end else begin
-						microop <= microop_prog[microop_pc];
-					end
+					microop <= microop_prog[microop_addr];
 					if(microop_pc == 0) begin
 						instruction <= 0;
 						APB_paddr <= pc;
@@ -185,7 +234,7 @@ end
 						2'b10: dsize <= 4'b1111;
 						default: dsize <= 4'b1111;
 					endcase
-					APB_paddr <= ((APB_pwrite)?imm_s:imm_i) + rd0;
+					APB_paddr <= alu_out;
 					APB_pdata <= rd1;
 					if(APB_penable && APB_psel && APB_pready && !APB_pwrite) begin
 						if(sub_op[2] == 1'b0) begin
@@ -208,7 +257,7 @@ end
 						systmp <= odata;
 					end
 				end else if(store_alu) regfile[wa] <= alu_out;
-				else if(alu_flags && cmp_flag) pc <= imm_b + pc - 4;
+				else if(alu_flags && cmp_flag) pc <= imm_b + oldpc;
 				else if(load_pc) begin
 					regfile[wa] <= pc;
 					pc <= alu_out;
@@ -216,4 +265,5 @@ end
 			end
 		end
 	end
+/* CPU end */
 endmodule
