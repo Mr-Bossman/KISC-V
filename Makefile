@@ -26,7 +26,7 @@ run: all
 	./$(PREFIX_NAME)
 
 tests:
-	rm test.vh || true
+	rm test.mem || true
 	$(MAKE) -C tests CROSS_COMPILE=$(CROSS_COMPILE)
 
 run_tests: all tests
@@ -35,15 +35,15 @@ run_tests: all tests
 rv32asm: src/rv32.s src/rv32.lds all
 	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/rv32.s -o $(BUILD_DIR)/example.o
 	$(TARGET_LD) --gc-sections -T src/rv32.lds $(BUILD_DIR)/example.o -o $(BUILD_DIR)/example.elf
-	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/example.elf test.vh
-	sed -i s/@.*//g test.vh
+	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/example.elf test.mem
+	sed -i s/@.*//g test.mem
 
 system: src/system.S src/system.c src/system.lds
 	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/system.S -o $(BUILD_DIR)/system_start.o
 	$(TARGET_CC) -march=rv32izicsr -O2 -mabi=ilp32 -Wall -Wno-array-bounds -Wno-unused-function -c src/system.c -o $(BUILD_DIR)/system.o
 	$(TARGET_LD) --gc-sections -T src/system.lds $(BUILD_DIR)/system_start.o $(BUILD_DIR)/system.o -o $(BUILD_DIR)/system.elf
-	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/system.elf system.vh
-	sed -i s/@.*//g system.vh
+	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/system.elf system.mem
+	sed -i s/@.*//g system.mem
 
 testkern: all
 	dtc -I dts -O dtb -o $(BUILD_DIR)/test.dtb linux/test.dts
@@ -51,7 +51,7 @@ testkern: all
 	truncate -s 2048 $(BUILD_DIR)/test.dtb # 0x800 round up to multiple of 4
 	truncate -s 16777216 $(BUILD_DIR)/test.bin # 0x1000000
 	cat $(BUILD_DIR)/test.dtb >> $(BUILD_DIR)/test.bin
-	$(CROSS_COMPILE)objcopy -Ibinary -O verilog --verilog-data-width=4 --reverse-bytes=4 $(BUILD_DIR)/test.bin test.vh
+	$(CROSS_COMPILE)objcopy -Ibinary -O verilog --verilog-data-width=4 --reverse-bytes=4 $(BUILD_DIR)/test.bin test.mem
 
 clean_exe:
 	rm -rf $(PREFIX_NAME)

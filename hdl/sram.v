@@ -1,7 +1,7 @@
 /* verilator lint_off UNUSEDSIGNAL */
 
 module sram
-	#(parameter FILE = "test.vh",
+	#(parameter FILE = "test.mem",
 		parameter ADDR_WIDTH = 32,
 		parameter DATA_WIDTH = 32,
 		parameter RAM_SIZE = 1000000)
