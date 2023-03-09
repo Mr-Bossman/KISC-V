@@ -4,7 +4,7 @@ module cpu
 	(input clk,
 	output reg [ADDR_WIDTH-1:0] APB_paddr,
 	output reg [DATA_WIDTH-1:0] APB_pdata,
-	input [DATA_WIDTH-1:0]  APB_prdata,
+	input [DATA_WIDTH-1:0] APB_prdata,
 	output APB_psel,
 	output APB_penable,
 	output APB_pwrite,
@@ -27,6 +27,7 @@ module cpu
 	wire [31:0] alu_out;
 	reg [31:0] aluRB;
 	reg [3:0] alu_op;
+	wire cmp_flag;
 /* ALU end */
 
 /* Regfile start*/
@@ -53,7 +54,7 @@ end
 	assign APB_psel = microop[0];
 	assign APB_penable = microop[1];
 	assign APB_pwrite = microop[2];
-	reg [3:0] dsize = 4'b1111;
+	reg [3:0] dsize;
 	/* APB spec dissalows read Byte mask */
 	assign APB_pstb = (APB_pwrite)?dsize:4'b1111;
 
@@ -75,7 +76,6 @@ end
 	/* Microcode reads need to be synchronous */
 	wire lui_flag = (load_insr && op_jmp == (7));
 	wire jal_flag = (load_insr && op_jmp == (8));
-	wire cmp_flag;
 /* flags end */
 
 /* Instruction operands start */
@@ -91,6 +91,20 @@ end
 	wire [31:0] imm_b = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
 /* Instruction operands end */
 
+/* Read/Write mask */
+	always_comb begin
+		if(mem_access) begin
+			unique case (sub_op[1:0])
+				2'b00: dsize = 4'b0001;
+				2'b01: dsize = 4'b0011;
+				2'b10: dsize = 4'b1111;
+				/* TODO: below is invalid */
+				default: dsize = 4'b1111;
+			endcase
+		end else
+			dsize = 4'b1111;
+	end
+/* Read/Write mask end */
 /* READ byte mask start */
 	integer i;
 	always_comb begin
@@ -178,13 +192,15 @@ end
 /* Microop PC end */
 /* Decode instruction groups end */
 
-/* LUI/AUIPC/JAL start */
+/* LUI/AUIPC/JAL/BRANCH start */
 	reg [31:0] LAJ_val;
 	always_comb begin
 		if(lui_flag && odata[5])
 			LAJ_val = imm_u;
 		else if(jal_flag)
 			LAJ_val = oldpc + imm_j;
+		else if(alu_flags)
+			LAJ_val = oldpc + imm_b;
 		else
 			LAJ_val = oldpc + imm_u;
 	end
@@ -216,24 +232,15 @@ end
 			// TODO: halt everywhere
 			// halt till APB_pready is ready
 			else begin
-				if(!(APB_penable && APB_psel && !APB_pready)) begin
+				if(!(APB_penable && APB_psel && !APB_pready))
 					microop <= microop_prog[microop_addr];
-					if(microop_pc == 0) begin
-						instruction <= 0;
-						APB_paddr <= pc;
-						pc <= pc + 4;
-						dsize <= 4'b1111;
-						oldpc <= pc;
-					end
-				end
 
-				if(mem_access) begin
-					unique case (sub_op[1:0])
-						2'b00: dsize <= 4'b0001;
-						2'b01: dsize <= 4'b0011;
-						2'b10: dsize <= 4'b1111;
-						default: dsize <= 4'b1111;
-					endcase
+				if(microop_pc == 0) begin
+					instruction <= 0;
+					APB_paddr <= pc;
+					pc <= pc + 4;
+					oldpc <= pc;
+				end else if(mem_access) begin
 					APB_paddr <= alu_out;
 					APB_pdata <= rd1;
 					if(APB_penable && APB_psel && APB_pready && !APB_pwrite) begin
@@ -250,14 +257,14 @@ end
 				end else if(sys_load) begin
 					APB_paddr <= 4;
 					APB_pdata <= pc;
-					if(APB_penable && APB_psel && APB_pready && APB_pwrite) begin
-						pc <= systmp;
-					end
-					if(APB_penable && APB_psel && APB_pready && !APB_pwrite) begin
-						systmp <= odata;
+					if(APB_penable && APB_psel && APB_pready) begin
+						if(APB_pwrite)
+							pc <= systmp;
+						else
+							systmp <= odata;
 					end
 				end else if(store_alu) regfile[wa] <= alu_out;
-				else if(alu_flags && cmp_flag) pc <= imm_b + oldpc;
+				else if(alu_flags && cmp_flag) pc <= LAJ_val;
 				else if(load_pc) begin
 					regfile[wa] <= pc;
 					pc <= alu_out;
