@@ -16,10 +16,7 @@ module cpu
 	output [31:0]odat,output reg [31:0] oldpc);
 	reg [31:0] pc;
 	/* We dont use ra0 or ra1 */
-	/* verilator lint_off UNUSEDSIGNAL */
 	reg [31:0] instruction;
-	/* verilator lint_on UNUSEDSIGNAL */
-	reg [31:0] systmp;
 	reg halt = 0;
 	assign halted = halt;
 
@@ -261,9 +258,9 @@ end
 					APB_pdata <= pc;
 					if(APB_penable && APB_psel && APB_pready) begin
 						if(APB_pwrite)
-							pc <= systmp;
+							pc <= instruction;
 						else
-							systmp <= odata;
+							instruction <= odata;
 					end
 				end else if(store_alu) regfile[wa] <= alu_out;
 				else if(load_pc) begin
