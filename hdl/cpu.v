@@ -58,7 +58,8 @@ end
 	reg [3:0] dsize;
 	/* APB spec dissalows read Byte mask */
 	assign APB_pstb = (APB_pwrite)?dsize:4'b1111;
-
+	/* If we are not writing or writing this is high*/
+	wire APB_Dready = !APB_penable || !APB_psel || APB_pready;
 	reg [31:0] odata;
 /* AHB end */
 
@@ -215,7 +216,8 @@ end
 			microop <= 0;
 			halt <= 0;
 		end else if(!halt) begin
-			if(load_insr) begin
+			// halt till APB_pready is ready
+			if(load_insr && APB_Dready) begin
 				instruction <= odata;
 				if(odata == 32'b0) halt <= 1;
 				microop <= microop_prog[microop_addr];
@@ -230,10 +232,9 @@ end
 					rd1 <= ra1 == 5'b0 ? 0 : regfile[ra1];
 				end
 			end
-			// TODO: halt everywhere
-			// halt till APB_pready is ready
 			else begin
-				if(!(APB_penable && APB_psel && !APB_pready))
+				// halt till APB_pready is ready
+				if(APB_Dready)
 					microop <= microop_prog[microop_addr];
 
 				if(microop_pc == 0) begin
