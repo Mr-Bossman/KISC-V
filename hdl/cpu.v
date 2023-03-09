@@ -212,6 +212,7 @@ end
 			APB_paddr <= 0;
 			microop <= 0;
 			halt <= 0;
+			instruction <= 0;
 		end else if(!halt) begin
 			// halt till APB_pready is ready
 			if(load_insr && APB_Dready) begin
