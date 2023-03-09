@@ -31,7 +31,7 @@ module cpu
 	reg [31:0]rd1;
 	reg [31:0] regfile[31:0];
 /* Regfile end*/
-	reg[6:0] op_jmp;
+	reg[3:0] op_jmp;
 	reg [22:0] microop_prog[0:71];
 	reg [22:0] microop;
 	wire [6:0] microop_pc = microop[22:16];
@@ -61,8 +61,8 @@ module cpu
 	wire jal_flag = (load_insr)?microop_prog[op_jmp][10]:0;
 */
 	/* Microcode reads need to be synchronous */
-	wire lui_flag = (load_insr && op_jmp == (7*8));
-	wire jal_flag = (load_insr && op_jmp == (8*8));
+	wire lui_flag = (load_insr && op_jmp == (7));
+	wire jal_flag = (load_insr && op_jmp == (8));
 	wire cmp_flag;
 /* flags end */
 initial begin
@@ -107,31 +107,31 @@ end
 	always_comb begin
 		casez (odata[6:0])
 			7'b0100011: begin // STORE
-				op_jmp = 1*8;
+				op_jmp = 1;
 			end
 			7'b0000011: begin // LOAD
-				op_jmp = 2*8;
+				op_jmp = 2;
 			end
 			7'b0?10111: begin //LUI/AUIPC
-				op_jmp = 7*8;
+				op_jmp = 7;
 			end
 			7'b0?10011: begin // ALU
-				op_jmp = 4*8;
+				op_jmp = 4;
 			end
 			7'b1101111: begin // JAL
-				op_jmp = 8*8;
+				op_jmp = 8;
 			end
 			7'b1100111: begin // JALR
-				op_jmp = 5*8;
+				op_jmp = 5;
 			end
 			7'b1100011: begin // BRANCH
-				op_jmp = 6*8;
+				op_jmp = 6;
 			end
 			7'b1110011: begin // SYSTEM
-				op_jmp = 3*8;
+				op_jmp = 3;
 			end
 			default: begin // SYSTEM
-				op_jmp = 3*8;
+				op_jmp = 3;
 			end
 		endcase
 	end
@@ -147,7 +147,7 @@ end
 			if(load_insr) begin
 				instruction <= odata;
 				if(odata == 32'b0) halt <= 1;
-				microop <= microop_prog[op_jmp];
+				microop <= microop_prog[{op_jmp,3'b0}];
 				if(lui_flag) begin
 					regfile[odata[11:7]] <= imm_u + ((odata[5])?0:pc-4);
 				end
