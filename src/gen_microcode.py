@@ -44,7 +44,7 @@ SYSTEM = [Micro_ops.SYS_LOAD,
 
 ALU = [Micro_ops.ALU_STORE,Micro_ops.NOP]
 JALR = [Micro_ops.LOAD_PC,Micro_ops.NOP]
-BRANCH = [Micro_ops.ALU_FLAGS,Micro_ops.NOP]
+BRANCH = [Micro_ops.ALU_FLAGS | Micro_ops.LOAD_PC,Micro_ops.NOP]
 LUI = [Micro_ops.LUI_FLAG]
 JAL = [Micro_ops.JAL_FLAG]
 

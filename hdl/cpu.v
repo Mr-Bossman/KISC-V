@@ -266,10 +266,13 @@ end
 							systmp <= odata;
 					end
 				end else if(store_alu) regfile[wa] <= alu_out;
-				else if(alu_flags && cmp_flag) pc <= LAJ_val;
 				else if(load_pc) begin
-					regfile[wa] <= pc;
-					pc <= alu_out;
+					if(alu_flags && cmp_flag)
+						pc <= LAJ_val;
+					else if(!alu_flags) begin
+						pc <= alu_out;
+						regfile[odata[11:7]] <= pc;
+					end
 				end
 			end
 		end
