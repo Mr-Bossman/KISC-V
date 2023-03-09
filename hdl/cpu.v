@@ -53,7 +53,8 @@ end
 /* AHB start */
 	assign APB_psel = microop[0];
 	assign APB_penable = microop[1];
-	assign APB_pwrite = microop[2];
+	wire pwrite = microop[2];
+	assign APB_pwrite = (pwrite && APB_psel);
 	reg [3:0] dsize;
 	/* APB spec dissalows read Byte mask */
 	assign APB_pstb = (APB_pwrite)?dsize:4'b1111;
@@ -129,7 +130,7 @@ end
 		// use add imm for 1100111 AKA JALR
 		if(instruction[5] && op != 7'b1100111 && !mem_access)
 			aluRB = rd1;
-		else if (APB_pwrite)
+		else if (pwrite)
 			aluRB = imm_s;
 		else
 			aluRB = imm_i;
