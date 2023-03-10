@@ -1,0 +1,1068 @@
+{
+  "design": {
+    "design_info": {
+      "boundary_crc": "0x9688E10536BBF7D6",
+      "device": "xc7z020clg400-1",
+      "name": "KISCV",
+      "rev_ctrl_bd_flag": "RevCtrlBdOff",
+      "synth_flow_mode": "None",
+      "tool_version": "2022.2",
+      "validated": "true"
+    },
+    "design_tree": {
+      "clk_wiz_0": "",
+      "cpu_0": "",
+      "APB_0": "",
+      "intctrl_0": "",
+      "timer_0": "",
+      "uart_wraper_0": "",
+      "sram_0": "",
+      "sram_1": ""
+    },
+    "ports": {
+      "sys_clock": {
+        "type": "clk",
+        "direction": "I",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "KISCV_sys_clock",
+            "value_src": "default"
+          },
+          "FREQ_HZ": {
+            "value": "125000000"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0"
+          }
+        }
+      },
+      "reset_rtl": {
+        "type": "rst",
+        "direction": "I",
+        "parameters": {
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "POLARITY": {
+            "value": "ACTIVE_HIGH"
+          }
+        }
+      },
+      "halted": {
+        "direction": "O"
+      },
+      "sRX_0": {
+        "direction": "I"
+      },
+      "sTX_0": {
+        "direction": "O"
+      }
+    },
+    "components": {
+      "clk_wiz_0": {
+        "vlnv": "xilinx.com:ip:clk_wiz:6.0",
+        "xci_name": "KISCV_clk_wiz_0_0",
+        "xci_path": "ip/KISCV_clk_wiz_0_0/KISCV_clk_wiz_0_0.xci",
+        "inst_hier_path": "clk_wiz_0",
+        "parameters": {
+          "CLKOUT1_JITTER": {
+            "value": "387.840"
+          },
+          "CLKOUT1_PHASE_ERROR": {
+            "value": "325.593"
+          },
+          "CLKOUT1_REQUESTED_OUT_FREQ": {
+            "value": "29.4911"
+          },
+          "CLKOUT1_USED": {
+            "value": "true"
+          },
+          "CLKOUT2_JITTER": {
+            "value": "355.561"
+          },
+          "CLKOUT2_PHASE_ERROR": {
+            "value": "287.687"
+          },
+          "CLKOUT2_REQUESTED_OUT_FREQ": {
+            "value": "100.000"
+          },
+          "CLKOUT2_USED": {
+            "value": "false"
+          },
+          "CLK_IN1_BOARD_INTERFACE": {
+            "value": "sys_clock"
+          },
+          "MMCM_CLKFBOUT_MULT_F": {
+            "value": "24.625"
+          },
+          "MMCM_CLKIN2_PERIOD": {
+            "value": "10.0"
+          },
+          "MMCM_CLKOUT0_DIVIDE_F": {
+            "value": "20.875"
+          },
+          "MMCM_CLKOUT1_DIVIDE": {
+            "value": "1"
+          },
+          "MMCM_DIVCLK_DIVIDE": {
+            "value": "5"
+          },
+          "NUM_OUT_CLKS": {
+            "value": "1"
+          },
+          "USE_BOARD_FLOW": {
+            "value": "true"
+          },
+          "USE_LOCKED": {
+            "value": "false"
+          }
+        }
+      },
+      "cpu_0": {
+        "vlnv": "xilinx.com:module_ref:cpu:1.0",
+        "xci_name": "KISCV_cpu_0_0",
+        "xci_path": "ip/KISCV_cpu_0_0/KISCV_cpu_0_0.xci",
+        "inst_hier_path": "cpu_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "cpu",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "clk": {
+            "type": "clk",
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "29491017",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "APB_paddr": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "APB_pdata": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "APB_prdata": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "APB_psel": {
+            "direction": "O"
+          },
+          "APB_penable": {
+            "direction": "O"
+          },
+          "APB_pwrite": {
+            "direction": "O"
+          },
+          "APB_pstb": {
+            "direction": "O",
+            "left": "3",
+            "right": "0"
+          },
+          "APB_pready": {
+            "direction": "I"
+          },
+          "APB_perr": {
+            "direction": "I"
+          },
+          "interrupt": {
+            "type": "intr",
+            "direction": "I",
+            "parameters": {
+              "SENSITIVITY": {
+                "value": "LEVEL_HIGH",
+                "value_src": "constant"
+              }
+            }
+          },
+          "rts": {
+            "direction": "I",
+            "parameters": {
+              "POLARITY": {
+                "value": "ACTIVE_HIGH",
+                "value_src": "user_prop"
+              }
+            }
+          },
+          "halted": {
+            "direction": "O"
+          }
+        }
+      },
+      "APB_0": {
+        "vlnv": "xilinx.com:module_ref:APB:1.0",
+        "xci_name": "KISCV_APB_0_0",
+        "xci_path": "ip/KISCV_APB_0_0/KISCV_APB_0_0.xci",
+        "inst_hier_path": "APB_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "APB",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "pclk": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "29491017",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "paddr": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "pdata": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "prdata": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "psel": {
+            "direction": "I"
+          },
+          "penable": {
+            "direction": "I"
+          },
+          "pwrite": {
+            "direction": "I"
+          },
+          "pstb": {
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "pready": {
+            "direction": "O"
+          },
+          "perr": {
+            "direction": "O"
+          },
+          "sram_sel": {
+            "direction": "O"
+          },
+          "sram_enable": {
+            "direction": "O"
+          },
+          "sram_data": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "sram_ready": {
+            "direction": "I"
+          },
+          "sram_perr": {
+            "direction": "I"
+          },
+          "uart_sel": {
+            "direction": "O"
+          },
+          "uart_enable": {
+            "direction": "O"
+          },
+          "uart_data": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "uart_ready": {
+            "direction": "I"
+          },
+          "uart_perr": {
+            "direction": "I"
+          },
+          "system_sel": {
+            "direction": "O"
+          },
+          "system_enable": {
+            "direction": "O"
+          },
+          "system_data": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "system_ready": {
+            "direction": "I"
+          },
+          "system_perr": {
+            "direction": "I"
+          },
+          "intc_sel": {
+            "direction": "O"
+          },
+          "intc_enable": {
+            "direction": "O"
+          },
+          "intc_data": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "intc_ready": {
+            "direction": "I"
+          },
+          "intc_perr": {
+            "direction": "I"
+          },
+          "timer_sel": {
+            "direction": "O"
+          },
+          "timer_enable": {
+            "direction": "O"
+          },
+          "timer_data": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "timer_ready": {
+            "direction": "I"
+          },
+          "timer_perr": {
+            "direction": "I"
+          }
+        }
+      },
+      "intctrl_0": {
+        "vlnv": "xilinx.com:module_ref:intctrl:1.0",
+        "xci_name": "KISCV_intctrl_0_0",
+        "xci_path": "ip/KISCV_intctrl_0_0/KISCV_intctrl_0_0.xci",
+        "inst_hier_path": "intctrl_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "intctrl",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "pclk": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "29491017",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "paddr": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "pdata": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "prdata": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "psel": {
+            "direction": "I"
+          },
+          "penable": {
+            "direction": "I"
+          },
+          "pwrite": {
+            "direction": "I"
+          },
+          "pstb": {
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "pready": {
+            "direction": "O"
+          },
+          "perr": {
+            "direction": "O"
+          },
+          "cpu_interrupt": {
+            "type": "intr",
+            "direction": "O",
+            "parameters": {
+              "SENSITIVITY": {
+                "value": "LEVEL_HIGH",
+                "value_src": "constant"
+              }
+            }
+          },
+          "APB_perr": {
+            "direction": "I"
+          },
+          "timer_int": {
+            "direction": "I",
+            "parameters": {
+              "SENSITIVITY": {
+                "value": "LEVEL_HIGH",
+                "value_src": "const_prop"
+              },
+              "PortWidth": {
+                "value": "1",
+                "value_src": "default_prop"
+              }
+            }
+          }
+        }
+      },
+      "timer_0": {
+        "vlnv": "xilinx.com:module_ref:timer:1.0",
+        "xci_name": "KISCV_timer_0_0",
+        "xci_path": "ip/KISCV_timer_0_0/KISCV_timer_0_0.xci",
+        "inst_hier_path": "timer_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "timer",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "pclk": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "29491017",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "paddr": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "pdata": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "prdata": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "psel": {
+            "direction": "I"
+          },
+          "penable": {
+            "direction": "I"
+          },
+          "pwrite": {
+            "direction": "I"
+          },
+          "pstb": {
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "pready": {
+            "direction": "O"
+          },
+          "perr": {
+            "direction": "O"
+          },
+          "timer_interrupt": {
+            "type": "intr",
+            "direction": "O",
+            "parameters": {
+              "SENSITIVITY": {
+                "value": "LEVEL_HIGH",
+                "value_src": "constant"
+              },
+              "PortWidth": {
+                "value": "1",
+                "value_src": "default_prop"
+              }
+            }
+          }
+        }
+      },
+      "uart_wraper_0": {
+        "vlnv": "xilinx.com:module_ref:uart_wraper:1.0",
+        "xci_name": "KISCV_uart_wraper_0_0",
+        "xci_path": "ip/KISCV_uart_wraper_0_0/KISCV_uart_wraper_0_0.xci",
+        "inst_hier_path": "uart_wraper_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "uart_wraper",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "pclk": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "29491017",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "paddr": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "pdata": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "prdata": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "psel": {
+            "direction": "I"
+          },
+          "penable": {
+            "direction": "I"
+          },
+          "pwrite": {
+            "direction": "I"
+          },
+          "pstb": {
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "pready": {
+            "direction": "O"
+          },
+          "perr": {
+            "direction": "O"
+          },
+          "PRESETn": {
+            "direction": "I",
+            "parameters": {
+              "POLARITY": {
+                "value": "ACTIVE_HIGH",
+                "value_src": "user_prop"
+              }
+            }
+          },
+          "BR_clk": {
+            "type": "clk",
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "29491017",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "sRX": {
+            "direction": "I"
+          },
+          "sTX": {
+            "direction": "O"
+          }
+        }
+      },
+      "sram_0": {
+        "vlnv": "xilinx.com:module_ref:sram:1.0",
+        "xci_name": "KISCV_sram_0_0",
+        "xci_path": "ip/KISCV_sram_0_0/KISCV_sram_0_0.xci",
+        "inst_hier_path": "sram_0",
+        "parameters": {
+          "FILE": {
+            "value": "test.mem"
+          },
+          "RAM_SIZE": {
+            "value": "0"
+          }
+        },
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "sram",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "pclk": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "29491017",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "paddr": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "pdata": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "prdata": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "psel": {
+            "direction": "I"
+          },
+          "penable": {
+            "direction": "I"
+          },
+          "pwrite": {
+            "direction": "I"
+          },
+          "pstb": {
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "pready": {
+            "direction": "O"
+          },
+          "perr": {
+            "direction": "O"
+          }
+        }
+      },
+      "sram_1": {
+        "vlnv": "xilinx.com:module_ref:sram:1.0",
+        "xci_name": "KISCV_sram_1_0",
+        "xci_path": "ip/KISCV_sram_1_0/KISCV_sram_1_0.xci",
+        "inst_hier_path": "sram_1",
+        "parameters": {
+          "FILE": {
+            "value": "system.mem"
+          },
+          "RAM_SIZE": {
+            "value": "1000"
+          }
+        },
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "sram",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "pclk": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "29491017",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "paddr": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "pdata": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "prdata": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "psel": {
+            "direction": "I"
+          },
+          "penable": {
+            "direction": "I"
+          },
+          "pwrite": {
+            "direction": "I"
+          },
+          "pstb": {
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "pready": {
+            "direction": "O"
+          },
+          "perr": {
+            "direction": "O"
+          }
+        }
+      }
+    },
+    "nets": {
+      "APB_0_intc_enable": {
+        "ports": [
+          "APB_0/intc_enable",
+          "intctrl_0/penable"
+        ]
+      },
+      "APB_0_intc_sel": {
+        "ports": [
+          "APB_0/intc_sel",
+          "intctrl_0/psel"
+        ]
+      },
+      "APB_0_perr": {
+        "ports": [
+          "APB_0/perr",
+          "cpu_0/APB_perr",
+          "intctrl_0/APB_perr"
+        ]
+      },
+      "APB_0_prdata": {
+        "ports": [
+          "APB_0/prdata",
+          "cpu_0/APB_prdata"
+        ]
+      },
+      "APB_0_pready": {
+        "ports": [
+          "APB_0/pready",
+          "cpu_0/APB_pready"
+        ]
+      },
+      "APB_0_sram_enable": {
+        "ports": [
+          "APB_0/sram_enable",
+          "sram_0/penable"
+        ]
+      },
+      "APB_0_sram_sel": {
+        "ports": [
+          "APB_0/sram_sel",
+          "sram_0/psel"
+        ]
+      },
+      "APB_0_system_enable": {
+        "ports": [
+          "APB_0/system_enable",
+          "sram_1/penable"
+        ]
+      },
+      "APB_0_system_sel": {
+        "ports": [
+          "APB_0/system_sel",
+          "sram_1/psel"
+        ]
+      },
+      "APB_0_timer_enable": {
+        "ports": [
+          "APB_0/timer_enable",
+          "timer_0/penable"
+        ]
+      },
+      "APB_0_timer_sel": {
+        "ports": [
+          "APB_0/timer_sel",
+          "timer_0/psel"
+        ]
+      },
+      "APB_0_uart_enable": {
+        "ports": [
+          "APB_0/uart_enable",
+          "uart_wraper_0/penable"
+        ]
+      },
+      "APB_0_uart_sel": {
+        "ports": [
+          "APB_0/uart_sel",
+          "uart_wraper_0/psel"
+        ]
+      },
+      "Net": {
+        "ports": [
+          "cpu_0/APB_pstb",
+          "APB_0/pstb",
+          "intctrl_0/pstb",
+          "timer_0/pstb",
+          "uart_wraper_0/pstb",
+          "sram_0/pstb",
+          "sram_1/pstb"
+        ]
+      },
+      "clk_wiz_0_clk_out1": {
+        "ports": [
+          "clk_wiz_0/clk_out1",
+          "cpu_0/clk",
+          "APB_0/pclk",
+          "intctrl_0/pclk",
+          "timer_0/pclk",
+          "uart_wraper_0/pclk",
+          "uart_wraper_0/BR_clk",
+          "sram_0/pclk",
+          "sram_1/pclk"
+        ]
+      },
+      "cpu_0_APB_paddr": {
+        "ports": [
+          "cpu_0/APB_paddr",
+          "APB_0/paddr",
+          "intctrl_0/paddr",
+          "timer_0/paddr",
+          "uart_wraper_0/paddr",
+          "sram_0/paddr",
+          "sram_1/paddr"
+        ]
+      },
+      "cpu_0_APB_pdata": {
+        "ports": [
+          "cpu_0/APB_pdata",
+          "APB_0/pdata",
+          "intctrl_0/pdata",
+          "timer_0/pdata",
+          "uart_wraper_0/pdata",
+          "sram_0/pdata",
+          "sram_1/pdata"
+        ]
+      },
+      "cpu_0_APB_penable": {
+        "ports": [
+          "cpu_0/APB_penable",
+          "APB_0/penable"
+        ]
+      },
+      "cpu_0_APB_psel": {
+        "ports": [
+          "cpu_0/APB_psel",
+          "APB_0/psel"
+        ]
+      },
+      "cpu_0_APB_pwrite": {
+        "ports": [
+          "cpu_0/APB_pwrite",
+          "APB_0/pwrite",
+          "intctrl_0/pwrite",
+          "timer_0/pwrite",
+          "uart_wraper_0/pwrite",
+          "sram_0/pwrite",
+          "sram_1/pwrite"
+        ]
+      },
+      "cpu_0_halted": {
+        "ports": [
+          "cpu_0/halted",
+          "halted"
+        ]
+      },
+      "intctrl_0_cpu_interrupt": {
+        "ports": [
+          "intctrl_0/cpu_interrupt",
+          "cpu_0/interrupt"
+        ]
+      },
+      "intctrl_0_perr": {
+        "ports": [
+          "intctrl_0/perr",
+          "APB_0/intc_perr"
+        ]
+      },
+      "intctrl_0_prdata": {
+        "ports": [
+          "intctrl_0/prdata",
+          "APB_0/intc_data"
+        ]
+      },
+      "intctrl_0_pready": {
+        "ports": [
+          "intctrl_0/pready",
+          "APB_0/intc_ready"
+        ]
+      },
+      "reset_rtl_1": {
+        "ports": [
+          "reset_rtl",
+          "clk_wiz_0/reset",
+          "cpu_0/rts",
+          "uart_wraper_0/PRESETn"
+        ]
+      },
+      "sRX_0_1": {
+        "ports": [
+          "sRX_0",
+          "uart_wraper_0/sRX"
+        ]
+      },
+      "sram_0_perr": {
+        "ports": [
+          "sram_0/perr",
+          "APB_0/sram_perr"
+        ]
+      },
+      "sram_0_prdata": {
+        "ports": [
+          "sram_0/prdata",
+          "APB_0/sram_data"
+        ]
+      },
+      "sram_0_pready": {
+        "ports": [
+          "sram_0/pready",
+          "APB_0/sram_ready"
+        ]
+      },
+      "sram_1_perr": {
+        "ports": [
+          "sram_1/perr",
+          "APB_0/system_perr"
+        ]
+      },
+      "sram_1_prdata": {
+        "ports": [
+          "sram_1/prdata",
+          "APB_0/system_data"
+        ]
+      },
+      "sram_1_pready": {
+        "ports": [
+          "sram_1/pready",
+          "APB_0/system_ready"
+        ]
+      },
+      "sys_clock_1": {
+        "ports": [
+          "sys_clock",
+          "clk_wiz_0/clk_in1"
+        ]
+      },
+      "timer_0_perr": {
+        "ports": [
+          "timer_0/perr",
+          "APB_0/timer_perr"
+        ]
+      },
+      "timer_0_prdata": {
+        "ports": [
+          "timer_0/prdata",
+          "APB_0/timer_data"
+        ]
+      },
+      "timer_0_pready": {
+        "ports": [
+          "timer_0/pready",
+          "APB_0/timer_ready"
+        ]
+      },
+      "timer_0_timer_interrupt": {
+        "ports": [
+          "timer_0/timer_interrupt",
+          "intctrl_0/timer_int"
+        ]
+      },
+      "uart_wraper_0_perr": {
+        "ports": [
+          "uart_wraper_0/perr",
+          "APB_0/uart_perr"
+        ]
+      },
+      "uart_wraper_0_prdata": {
+        "ports": [
+          "uart_wraper_0/prdata",
+          "APB_0/uart_data"
+        ]
+      },
+      "uart_wraper_0_pready": {
+        "ports": [
+          "uart_wraper_0/pready",
+          "APB_0/uart_ready"
+        ]
+      },
+      "uart_wraper_0_sTX": {
+        "ports": [
+          "uart_wraper_0/sTX",
+          "sTX_0"
+        ]
+      }
+    }
+  }
+}

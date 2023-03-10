@@ -13,6 +13,13 @@ git submodule update --init --recursive
 make CROSS_COMPILE=riscv32-unknown-elf- run_tests
 make CROSS_COMPILE=riscv32-unknown-elf- testkern
 ```
+# To get running on the ARTY-Z7
+```bash
+unzip opencores/opencores.zip -d opencores/
+vivado -mode batch -source ~/rv32_hdl/vivado/KISCV.tcl -tclargs --origin_dir ~/rv32_hdl/ -tclargs --project_name ${Your project name}
+```
+
+
 ## TODOS
- - Get running of acual FPGA
+ - Get Linux running of acual FPGA
 
