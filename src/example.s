@@ -6,11 +6,11 @@ start:
 	la x10, 0x10000000
 	la x6, .texts
 	li x5,0x80
-	sb x5, (4*3)(x10)
+	sb x5, 3(x10)
 	li x5, 8
 	sb x5,0(x10)
 	li x5,3
-	sb x5, (4*3)(x10)
+	sb x5, 3(x10)
 1:
 	lb x5, 0(x6)
 	sb x5, 0(x10)
