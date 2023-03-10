@@ -86,9 +86,16 @@ _start:
 	j back
 _init:
 	li x1, 0x1800
-	csrrw x0, mstatus,x1
+	csrrw x0, mstatus, x1
+	la x11, 0x10000000
+	li x1, 0x80
+	sb x1, (4*3)(x11)
+	li x1, 8
+	sb x1, 0(x11)
+	li x1, 3
+	sb x1, (4*3)(x11)
 	la x11, 0x81000000
 	la x1, 0x80000000
 	sw x1, 0x4(x0)
-	mv x1,x0
+	mv x1, x0
 	j back
