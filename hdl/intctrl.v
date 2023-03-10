@@ -13,9 +13,9 @@ module intctrl
 		input penable,
 		input pwrite,
 		input [3:0] pstb,
-		output pready,
+		output reg pready,
 		output perr,
-		output reg cpu_interrupt,
+		output cpu_interrupt,
 		input APB_perr,
 		input timer_int);
 	reg [31:0] int_mask = 0;
