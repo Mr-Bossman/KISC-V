@@ -13,7 +13,7 @@ module timer
 		input penable,
 		input pwrite,
 		input [3:0] pstb,
-		output pready,
+		output reg pready,
 		output perr,
 		output reg timer_interrupt);
 	assign perr = 0;
