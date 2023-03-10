@@ -91,9 +91,9 @@ end
 /* Instruction operands end */
 
 /* Read/Write mask */
-	always_comb begin
+	always @(*) begin
 		if(mem_access) begin
-			unique case (sub_op[1:0])
+			case (sub_op[1:0])
 				2'b00: dsize = 4'b0001;
 				2'b01: dsize = 4'b0011;
 				2'b10: dsize = 4'b1111;
@@ -106,7 +106,7 @@ end
 /* Read/Write mask end */
 /* READ byte mask start */
 	integer i;
-	always_comb begin
+	always @(*) begin
 		for( i = 0; i <= (32/8)-1;i = i + 1) begin
 			if(dsize[i]) odata[8*i+:8] = APB_prdata[8*i+:8];
 			else odata[8*i+:8] = 8'b0;
@@ -124,7 +124,7 @@ end
 /* debug end */
 
 /* ALU decode start */
-	always_comb begin
+	always @(*) begin
 		// use add imm for 1100111 AKA JALR
 		if(instruction[5] && op != 7'b1100111 && !mem_access)
 			aluRB = rd1;
@@ -146,7 +146,7 @@ end
 /* ALU decode end */
 
 /* Decode instruction groups start */
-	always_comb begin
+	always @(*) begin
 		casez (odata[6:0])
 			7'b0100011: begin // STORE
 				op_jmp = 1;
@@ -179,7 +179,7 @@ end
 	end
 
 /* Microop PC start */
-	always_comb begin
+	always @(*) begin
 		if(load_insr)
 			microop_addr = {op_jmp,3'b0};
 		/* Don't interrupt if we are in the interrupt handler */
@@ -193,7 +193,7 @@ end
 
 /* LUI/AUIPC/JAL/BRANCH start */
 	reg [31:0] LAJ_val;
-	always_comb begin
+	always @(*) begin
 		if(lui_flag && odata[5])
 			LAJ_val = imm_u;
 		else if(jal_flag)
@@ -245,7 +245,7 @@ end
 					APB_pdata <= rd1;
 					if(APB_penable && APB_psel && APB_pready && !APB_pwrite) begin
 						if(sub_op[2] == 1'b0) begin
-							unique case (sub_op[1:0])
+							case (sub_op[1:0])
 								2'b00: regfile[wa] <= {{24{odata[7]}},odata[7:0]};
 								2'b01: regfile[wa] <= {{16{odata[15]}},odata[15:0]};
 								2'b10: regfile[wa] <= odata;

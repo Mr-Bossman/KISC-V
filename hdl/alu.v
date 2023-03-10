@@ -20,8 +20,8 @@ module alu
 	wire sub_cf = subtraction[32];
 	reg compare;
 	assign cmp = compare ^ m[0];
-	always_comb begin
-		unique case(m[2:1])
+	always @(*) begin
+		case(m[2:1])
 			2'b00:
 				compare = sub_zf;
 			2'b10:

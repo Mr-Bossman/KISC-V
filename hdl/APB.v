@@ -52,7 +52,7 @@ module APB
 		$display("Access fault: %h", paddr);
 	end
 
-	always_comb begin
+	always @(*) begin
 		if(paddr >= 'h80000000) begin // SRAM
 			access_fault = 0;
 			uart_sel = 0;

@@ -20,7 +20,7 @@ module timer
 	reg [63:0]wall_clock = 0;
 	reg [63:0]timer_match = 0;
 
-	always_comb begin
+	always @(*) begin
 		if(paddr  == 'h1100bffc) begin
 			prdata = wall_clock[63:32];
 		end else if (paddr == 'h1100bff8) begin
