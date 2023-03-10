@@ -1,3 +1,5 @@
 build/*
 !build/.hidden
 RV32emu
+*.mem
+!microop.mem
