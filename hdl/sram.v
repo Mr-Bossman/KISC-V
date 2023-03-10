@@ -29,7 +29,7 @@ reg [1:0]done;
 
 assign pready = penable && psel && done[1];
 assign perr = 0;
-always @(posedge pclk or posedge penable) begin
+always @(posedge pclk) begin
 	if(psel && penable) begin
 		if(paddr[1:0] != 2'b00)
 			done <= done + 1;
