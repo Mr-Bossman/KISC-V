@@ -32,11 +32,11 @@ tests:
 run_tests: all tests
 	./$(PREFIX_NAME)
 
-rv32asm: src/rv32.s src/rv32.lds all
-	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/rv32.s -o $(BUILD_DIR)/example.o
-	$(TARGET_LD) --gc-sections -T src/rv32.lds $(BUILD_DIR)/example.o -o $(BUILD_DIR)/example.elf
-	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/example.elf test.mem
-	sed -i s/@.*//g test.mem
+example: src/example.s src/example.lds all
+	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/example.s -o $(BUILD_DIR)/example.o
+	$(TARGET_LD) --gc-sections -T src/example.lds $(BUILD_DIR)/example.o -o $(BUILD_DIR)/example.elf
+	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/example.elf system.mem
+	sed -i s/@.*//g system.mem
 
 system: src/system.S src/system.c src/system.lds
 	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/system.S -o $(BUILD_DIR)/system_start.o
