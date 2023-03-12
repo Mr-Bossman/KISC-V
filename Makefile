@@ -32,9 +32,11 @@ tests:
 run_tests: all tests
 	./$(PREFIX_NAME)
 
-example: src/example.s src/example.lds all
-	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/example.s -o $(BUILD_DIR)/example.o
-	$(TARGET_LD) --gc-sections -T src/example.lds $(BUILD_DIR)/example.o -o $(BUILD_DIR)/example.elf
+example: src/example.s src/example.lds src/example.c
+	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/example.s -o $(BUILD_DIR)/example_start.o
+	$(TARGET_CC) -march=rv32izicsr -O2 -mabi=ilp32 -Wall -Wno-array-bounds -Wno-unused-function -c src/example.c -o $(BUILD_DIR)/example.o
+	$(TARGET_LD) --gc-sections -T src/example.lds $(BUILD_DIR)/example_start.o $(BUILD_DIR)/example.o -o $(BUILD_DIR)/example.elf
+
 	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/example.elf system.mem
 	sed -i s/@.*//g system.mem
 
@@ -43,6 +45,7 @@ system: src/system.S src/system.c src/system.lds
 	$(TARGET_CC) -march=rv32izicsr -O2 -mabi=ilp32 -Wall -Wno-array-bounds -Wno-unused-function -c src/system.c -o $(BUILD_DIR)/system.o
 	$(TARGET_LD) --gc-sections -T src/system.lds $(BUILD_DIR)/system_start.o $(BUILD_DIR)/system.o -o $(BUILD_DIR)/system.elf
 	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/system.elf system.mem
+	sed -i s/@.*//g test.mem
 	sed -i s/@.*//g system.mem
 
 testkern: all
