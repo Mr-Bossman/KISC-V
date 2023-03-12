@@ -12,8 +12,8 @@ module cpu
 	input APB_pready,
 	input APB_perr,
 	input interrupt,
-	input rts, output halted);
-	reg [31:0] oldpc;
+	input rts, output halted,
+	output [31:0]odat,output reg [31:0] oldpc);
 	reg [31:0] pc;
 	/* We dont use ra0 or ra1 */
 	reg [31:0] instruction;
@@ -39,9 +39,7 @@ module cpu
 /* Microcode start */
 	reg[3:0] op_jmp;
 	reg [22:0] microop_prog[0:71];
-	/* verilator lint_off UNUSEDSIGNAL */
 	reg [22:0] microop;
-	/* verilator lint_on UNUSEDSIGNAL */
 	wire [6:0] microop_pc = microop[22:16];
 	reg [6:0] microop_addr;
 initial begin
@@ -120,6 +118,7 @@ end
 /* verilator lint_off UNUSEDSIGNAL */
 /* verilator lint_off WIDTH */
 	wire not_use = APB_perr;
+	assign odat = microop;
 /* verilator lint_on WIDTH */
 /* verilator lint_on UNUSEDSIGNAL */
 /* debug end */
