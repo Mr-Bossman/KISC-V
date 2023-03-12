@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x9688E10536BBF7D6",
+      "boundary_crc": "0xAAFBFB626EABC7DF",
       "device": "xc7z020clg400-1",
       "name": "KISCV",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
@@ -15,9 +15,9 @@
       "APB_0": "",
       "intctrl_0": "",
       "timer_0": "",
-      "uart_wraper_0": "",
       "sram_0": "",
-      "sram_1": ""
+      "psram_0": "",
+      "uart_wraper_0": ""
     },
     "ports": {
       "sys_clock": {
@@ -65,6 +65,41 @@
       },
       "sTX_0": {
         "direction": "O"
+      },
+      "SI_0": {
+        "direction": "O"
+      },
+      "cs_0": {
+        "direction": "O"
+      },
+      "SO_0": {
+        "direction": "I"
+      },
+      "clk_out1_0": {
+        "type": "clk",
+        "direction": "O",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "/clk_wiz_0_clk_out1",
+            "value_src": "ip_prop"
+          },
+          "FREQ_HZ": {
+            "value": "7373997",
+            "value_src": "ip_prop"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "ip_prop"
+          }
+        }
       }
     },
     "components": {
@@ -75,54 +110,57 @@
         "inst_hier_path": "clk_wiz_0",
         "parameters": {
           "CLKOUT1_JITTER": {
-            "value": "387.840"
+            "value": "555.644"
           },
           "CLKOUT1_PHASE_ERROR": {
-            "value": "325.593"
+            "value": "494.034"
           },
           "CLKOUT1_REQUESTED_OUT_FREQ": {
-            "value": "29.4911"
+            "value": "14.745"
           },
           "CLKOUT1_USED": {
             "value": "true"
           },
           "CLKOUT2_JITTER": {
-            "value": "355.561"
+            "value": "615.877"
           },
           "CLKOUT2_PHASE_ERROR": {
-            "value": "287.687"
+            "value": "494.034"
           },
           "CLKOUT2_REQUESTED_OUT_FREQ": {
-            "value": "100.000"
+            "value": "7.3725"
           },
           "CLKOUT2_USED": {
-            "value": "false"
+            "value": "true"
           },
           "CLK_IN1_BOARD_INTERFACE": {
             "value": "sys_clock"
           },
           "MMCM_CLKFBOUT_MULT_F": {
-            "value": "24.625"
+            "value": "51.500"
           },
           "MMCM_CLKIN2_PERIOD": {
             "value": "10.0"
           },
           "MMCM_CLKOUT0_DIVIDE_F": {
-            "value": "20.875"
+            "value": "48.500"
           },
           "MMCM_CLKOUT1_DIVIDE": {
-            "value": "1"
+            "value": "97"
           },
           "MMCM_DIVCLK_DIVIDE": {
-            "value": "5"
+            "value": "9"
           },
           "NUM_OUT_CLKS": {
-            "value": "1"
+            "value": "2"
           },
           "USE_BOARD_FLOW": {
             "value": "true"
           },
           "USE_LOCKED": {
+            "value": "false"
+          },
+          "USE_RESET": {
             "value": "false"
           }
         }
@@ -143,7 +181,7 @@
             "direction": "I",
             "parameters": {
               "FREQ_HZ": {
-                "value": "29491017",
+                "value": "7373997",
                 "value_src": "ip_prop"
               },
               "PHASE": {
@@ -230,7 +268,7 @@
             "direction": "I",
             "parameters": {
               "FREQ_HZ": {
-                "value": "29491017",
+                "value": "7373997",
                 "value_src": "ip_prop"
               },
               "PHASE": {
@@ -380,7 +418,7 @@
             "direction": "I",
             "parameters": {
               "FREQ_HZ": {
-                "value": "29491017",
+                "value": "7373997",
                 "value_src": "ip_prop"
               },
               "PHASE": {
@@ -471,7 +509,7 @@
             "direction": "I",
             "parameters": {
               "FREQ_HZ": {
-                "value": "29491017",
+                "value": "7373997",
                 "value_src": "ip_prop"
               },
               "PHASE": {
@@ -535,6 +573,153 @@
           }
         }
       },
+      "sram_0": {
+        "vlnv": "xilinx.com:module_ref:sram:1.0",
+        "xci_name": "KISCV_sram_0_1",
+        "xci_path": "ip/KISCV_sram_0_1/KISCV_sram_0_1.xci",
+        "inst_hier_path": "sram_0",
+        "parameters": {
+          "FILE": {
+            "value": "system.mem"
+          },
+          "RAM_SIZE": {
+            "value": "1000"
+          }
+        },
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "sram",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "pclk": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "7373997",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "paddr": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "pdata": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "prdata": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "psel": {
+            "direction": "I"
+          },
+          "penable": {
+            "direction": "I"
+          },
+          "pwrite": {
+            "direction": "I"
+          },
+          "pstb": {
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "pready": {
+            "direction": "O"
+          },
+          "perr": {
+            "direction": "O"
+          }
+        }
+      },
+      "psram_0": {
+        "vlnv": "xilinx.com:module_ref:psram:1.0",
+        "xci_name": "KISCV_psram_0_1",
+        "xci_path": "ip/KISCV_psram_0_1/KISCV_psram_0_1.xci",
+        "inst_hier_path": "psram_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "psram",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "pclk": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "7373997",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "paddr": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "pdata": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "prdata": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "psel": {
+            "direction": "I"
+          },
+          "penable": {
+            "direction": "I"
+          },
+          "pwrite": {
+            "direction": "I"
+          },
+          "pstb": {
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "pready": {
+            "direction": "O"
+          },
+          "perr": {
+            "direction": "O"
+          },
+          "cs": {
+            "direction": "O"
+          },
+          "SI": {
+            "direction": "O"
+          },
+          "SO": {
+            "direction": "I"
+          }
+        }
+      },
       "uart_wraper_0": {
         "vlnv": "xilinx.com:module_ref:uart_wraper:1.0",
         "xci_name": "KISCV_uart_wraper_0_0",
@@ -550,7 +735,7 @@
             "direction": "I",
             "parameters": {
               "FREQ_HZ": {
-                "value": "29491017",
+                "value": "7373997",
                 "value_src": "ip_prop"
               },
               "PHASE": {
@@ -612,7 +797,7 @@
             "direction": "I",
             "parameters": {
               "FREQ_HZ": {
-                "value": "29491017",
+                "value": "14747995",
                 "value_src": "ip_prop"
               },
               "PHASE": {
@@ -629,152 +814,6 @@
             "direction": "I"
           },
           "sTX": {
-            "direction": "O"
-          }
-        }
-      },
-      "sram_0": {
-        "vlnv": "xilinx.com:module_ref:sram:1.0",
-        "xci_name": "KISCV_sram_0_0",
-        "xci_path": "ip/KISCV_sram_0_0/KISCV_sram_0_0.xci",
-        "inst_hier_path": "sram_0",
-        "parameters": {
-          "FILE": {
-            "value": "test.mem"
-          },
-          "RAM_SIZE": {
-            "value": "0"
-          }
-        },
-        "reference_info": {
-          "ref_type": "hdl",
-          "ref_name": "sram",
-          "boundary_crc": "0x0"
-        },
-        "ports": {
-          "pclk": {
-            "direction": "I",
-            "parameters": {
-              "FREQ_HZ": {
-                "value": "29491017",
-                "value_src": "ip_prop"
-              },
-              "PHASE": {
-                "value": "0.0",
-                "value_src": "ip_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "/clk_wiz_0_clk_out1",
-                "value_src": "ip_prop"
-              }
-            }
-          },
-          "paddr": {
-            "direction": "I",
-            "left": "31",
-            "right": "0"
-          },
-          "pdata": {
-            "direction": "I",
-            "left": "31",
-            "right": "0"
-          },
-          "prdata": {
-            "direction": "O",
-            "left": "31",
-            "right": "0"
-          },
-          "psel": {
-            "direction": "I"
-          },
-          "penable": {
-            "direction": "I"
-          },
-          "pwrite": {
-            "direction": "I"
-          },
-          "pstb": {
-            "direction": "I",
-            "left": "3",
-            "right": "0"
-          },
-          "pready": {
-            "direction": "O"
-          },
-          "perr": {
-            "direction": "O"
-          }
-        }
-      },
-      "sram_1": {
-        "vlnv": "xilinx.com:module_ref:sram:1.0",
-        "xci_name": "KISCV_sram_1_0",
-        "xci_path": "ip/KISCV_sram_1_0/KISCV_sram_1_0.xci",
-        "inst_hier_path": "sram_1",
-        "parameters": {
-          "FILE": {
-            "value": "system.mem"
-          },
-          "RAM_SIZE": {
-            "value": "1000"
-          }
-        },
-        "reference_info": {
-          "ref_type": "hdl",
-          "ref_name": "sram",
-          "boundary_crc": "0x0"
-        },
-        "ports": {
-          "pclk": {
-            "direction": "I",
-            "parameters": {
-              "FREQ_HZ": {
-                "value": "29491017",
-                "value_src": "ip_prop"
-              },
-              "PHASE": {
-                "value": "0.0",
-                "value_src": "ip_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "/clk_wiz_0_clk_out1",
-                "value_src": "ip_prop"
-              }
-            }
-          },
-          "paddr": {
-            "direction": "I",
-            "left": "31",
-            "right": "0"
-          },
-          "pdata": {
-            "direction": "I",
-            "left": "31",
-            "right": "0"
-          },
-          "prdata": {
-            "direction": "O",
-            "left": "31",
-            "right": "0"
-          },
-          "psel": {
-            "direction": "I"
-          },
-          "penable": {
-            "direction": "I"
-          },
-          "pwrite": {
-            "direction": "I"
-          },
-          "pstb": {
-            "direction": "I",
-            "left": "3",
-            "right": "0"
-          },
-          "pready": {
-            "direction": "O"
-          },
-          "perr": {
             "direction": "O"
           }
         }
@@ -815,25 +854,25 @@
       "APB_0_sram_enable": {
         "ports": [
           "APB_0/sram_enable",
-          "sram_0/penable"
+          "psram_0/penable"
         ]
       },
       "APB_0_sram_sel": {
         "ports": [
           "APB_0/sram_sel",
-          "sram_0/psel"
+          "psram_0/psel"
         ]
       },
       "APB_0_system_enable": {
         "ports": [
           "APB_0/system_enable",
-          "sram_1/penable"
+          "sram_0/penable"
         ]
       },
       "APB_0_system_sel": {
         "ports": [
           "APB_0/system_sel",
-          "sram_1/psel"
+          "sram_0/psel"
         ]
       },
       "APB_0_timer_enable": {
@@ -866,22 +905,34 @@
           "APB_0/pstb",
           "intctrl_0/pstb",
           "timer_0/pstb",
-          "uart_wraper_0/pstb",
           "sram_0/pstb",
-          "sram_1/pstb"
+          "psram_0/pstb",
+          "uart_wraper_0/pstb"
+        ]
+      },
+      "SO_0_1": {
+        "ports": [
+          "SO_0",
+          "psram_0/SO"
         ]
       },
       "clk_wiz_0_clk_out1": {
         "ports": [
-          "clk_wiz_0/clk_out1",
+          "clk_wiz_0/clk_out2",
+          "clk_out1_0",
           "cpu_0/clk",
+          "timer_0/pclk",
+          "sram_0/pclk",
           "APB_0/pclk",
           "intctrl_0/pclk",
-          "timer_0/pclk",
-          "uart_wraper_0/pclk",
-          "uart_wraper_0/BR_clk",
-          "sram_0/pclk",
-          "sram_1/pclk"
+          "psram_0/pclk",
+          "uart_wraper_0/pclk"
+        ]
+      },
+      "clk_wiz_0_clk_out2": {
+        "ports": [
+          "clk_wiz_0/clk_out1",
+          "uart_wraper_0/BR_clk"
         ]
       },
       "cpu_0_APB_paddr": {
@@ -890,9 +941,9 @@
           "APB_0/paddr",
           "intctrl_0/paddr",
           "timer_0/paddr",
-          "uart_wraper_0/paddr",
           "sram_0/paddr",
-          "sram_1/paddr"
+          "psram_0/paddr",
+          "uart_wraper_0/paddr"
         ]
       },
       "cpu_0_APB_pdata": {
@@ -901,9 +952,9 @@
           "APB_0/pdata",
           "intctrl_0/pdata",
           "timer_0/pdata",
-          "uart_wraper_0/pdata",
           "sram_0/pdata",
-          "sram_1/pdata"
+          "psram_0/pdata",
+          "uart_wraper_0/pdata"
         ]
       },
       "cpu_0_APB_penable": {
@@ -924,9 +975,9 @@
           "APB_0/pwrite",
           "intctrl_0/pwrite",
           "timer_0/pwrite",
-          "uart_wraper_0/pwrite",
           "sram_0/pwrite",
-          "sram_1/pwrite"
+          "psram_0/pwrite",
+          "uart_wraper_0/pwrite"
         ]
       },
       "cpu_0_halted": {
@@ -959,10 +1010,39 @@
           "APB_0/intc_ready"
         ]
       },
+      "psram_0_SI": {
+        "ports": [
+          "psram_0/SI",
+          "SI_0"
+        ]
+      },
+      "psram_0_cs": {
+        "ports": [
+          "psram_0/cs",
+          "cs_0"
+        ]
+      },
+      "psram_0_perr": {
+        "ports": [
+          "psram_0/perr",
+          "APB_0/sram_perr"
+        ]
+      },
+      "psram_0_prdata": {
+        "ports": [
+          "psram_0/prdata",
+          "APB_0/sram_data"
+        ]
+      },
+      "psram_0_pready": {
+        "ports": [
+          "psram_0/pready",
+          "APB_0/sram_ready"
+        ]
+      },
       "reset_rtl_1": {
         "ports": [
           "reset_rtl",
-          "clk_wiz_0/reset",
           "cpu_0/rts",
           "uart_wraper_0/PRESETn"
         ]
@@ -976,36 +1056,18 @@
       "sram_0_perr": {
         "ports": [
           "sram_0/perr",
-          "APB_0/sram_perr"
+          "APB_0/system_perr"
         ]
       },
       "sram_0_prdata": {
         "ports": [
           "sram_0/prdata",
-          "APB_0/sram_data"
+          "APB_0/system_data"
         ]
       },
       "sram_0_pready": {
         "ports": [
           "sram_0/pready",
-          "APB_0/sram_ready"
-        ]
-      },
-      "sram_1_perr": {
-        "ports": [
-          "sram_1/perr",
-          "APB_0/system_perr"
-        ]
-      },
-      "sram_1_prdata": {
-        "ports": [
-          "sram_1/prdata",
-          "APB_0/system_data"
-        ]
-      },
-      "sram_1_pready": {
-        "ports": [
-          "sram_1/pready",
           "APB_0/system_ready"
         ]
       },

@@ -24,6 +24,7 @@ proc checkRequiredFiles { origin_dir} {
  "[file normalize "$origin_dir/hdl/cpu.v"]"\
  "[file normalize "$origin_dir/hdl/APB.v"]"\
  "[file normalize "$origin_dir/hdl/intctrl.v"]"\
+ "[file normalize "$origin_dir/hdl/psram.v"]"\
  "[file normalize "$origin_dir/hdl/timer.v"]"\
  "[file normalize "$origin_dir/opencores/library/gh_DECODE_3to8.vhd"]"\
  "[file normalize "$origin_dir/opencores/library/gh_baud_rate_gen.vhd"]"\
@@ -182,6 +183,7 @@ set files [list \
  [file normalize "${origin_dir}/hdl/cpu.v"] \
  [file normalize "${origin_dir}/hdl/APB.v"] \
  [file normalize "${origin_dir}/hdl/intctrl.v"] \
+ [file normalize "${origin_dir}/hdl/psram.v"] \
  [file normalize "${origin_dir}/hdl/timer.v"] \
  [file normalize "${origin_dir}/opencores/library/gh_DECODE_3to8.vhd"] \
  [file normalize "${origin_dir}/opencores/library/gh_baud_rate_gen.vhd"] \
