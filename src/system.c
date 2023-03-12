@@ -64,6 +64,7 @@ void entry(void) {
 	uint32_t opcode = instr & 0x0000007f;
 	int ret = 0;
 	int cause;
+	printC('C');
 	(void)ret; //TODO: use ret for error checking
 	/* Check for unimplemented instructions FENCE/FENCE.I ECALL/EBREAK CSRx and xMRET*/
 	if((cause = get_cause())) {
@@ -108,7 +109,8 @@ void entry(void) {
 				break;
 			}
 			ret = -1;
-			//printS("Unimplemented\n\r");
+			printS("Unimplemented\n\r");
+			goto *(void*)0x0;
 			break;
 		}
 		case 0x2F: // AMO
@@ -117,7 +119,8 @@ void entry(void) {
 			break;
 		default:
 			ret = bad_instruction(instr);
-			//printS("Bad_instruction\n\r");
+			printS("Bad_instruction\n\r");
+			goto *(void*)0x0;
 			break;
 	}
 	{
@@ -306,6 +309,7 @@ static int do_unknown_int(void){
 	printS("\n\rUnknown interrupt\n\r");
 	printH((uint32_t)CPUregs->pc);
 	printS("\n\r");
+	goto *(void*)0x0;
 	return 0;
 }
 
