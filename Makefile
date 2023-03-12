@@ -45,12 +45,11 @@ system: src/system.S src/system.c src/system.lds
 	$(TARGET_CC) -march=rv32izicsr -O2 -mabi=ilp32 -Wall -Wno-array-bounds -Wno-unused-function -c src/system.c -o $(BUILD_DIR)/system.o
 	$(TARGET_LD) --gc-sections -T src/system.lds $(BUILD_DIR)/system_start.o $(BUILD_DIR)/system.o -o $(BUILD_DIR)/system.elf
 	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/system.elf system.mem
-	sed -i s/@.*//g test.mem
 	sed -i s/@.*//g system.mem
 
 testkern: all
 	dtc -I dts -O dtb -o $(BUILD_DIR)/test.dtb linux/test.dts
-	$(CROSS_COMPILE)objcopy -Obinary linux/vmlinux $(BUILD_DIR)/test.bin
+	$(CROSS_COMPILE)objcopy -Obinary ~/linux/rv32/linux/vmlinux $(BUILD_DIR)/test.bin
 	truncate -s 2048 $(BUILD_DIR)/test.dtb # 0x800 round up to multiple of 4
 	truncate -s 16777216 $(BUILD_DIR)/test.bin # 0x1000000
 	cat $(BUILD_DIR)/test.dtb >> $(BUILD_DIR)/test.bin

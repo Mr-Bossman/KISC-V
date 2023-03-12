@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 		char buffer[4] = {0};
 		input.read(buffer, 4);
 		write(fd, buffer, input.gcount());
-		usleep(100000);
+		usleep(10000);
 		if(input.gcount() == 0)
 			break;
 	}

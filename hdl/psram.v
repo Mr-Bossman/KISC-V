@@ -4,7 +4,7 @@ module psram
 		parameter DATA_WIDTH = 32,
 		/* Command + 24-bit addr + 32-bit data */
 		parameter MAX_TRNS_SZ = 24 + 8 + DATA_WIDTH,
-		parameter RAM_SIZE = 1000000)
+		parameter RAM_SIZE = 1024*1024*8) // 8MiB
 	(
 		input pclk,
 		input [ADDR_WIDTH-1:0] paddr,
@@ -58,7 +58,7 @@ always @(negedge pclk) begin
 	if((psel && penable) || !transaction_done) begin
 		if(cnt == 0) begin
 			transaction_done <= 0;
-			if(paddr == 'h80000100) begin
+			if(paddr == 'h80000000+RAM_SIZE+4) begin
 				bits <= {pdata[7:0],56'b0};
 				cnt <= trns_sz-7;
 			end else begin

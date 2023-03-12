@@ -3,7 +3,7 @@
 
 #define UART_BASE ((volatile uint8_t*)0x10000000)
 #define RAM_BASE ((volatile uint32_t*)0x80000000)
-#define CTRL_BASE ((volatile uint32_t*)0x80000100)
+#define CTRL_BASE ((volatile uint32_t*)0x80800004)
 
 static inline uint8_t hasChar();
 static inline char getChar();
