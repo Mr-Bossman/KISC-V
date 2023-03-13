@@ -3,7 +3,7 @@ ENTRY(_start)
 
 SECTIONS
 {
-	. = 0x00000000;
+	. = 0x80000000;
 	.text : ALIGN(16) {
 		*(.asm)
 		*(.entry.text)

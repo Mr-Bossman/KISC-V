@@ -12,6 +12,7 @@ INCV_SOURCES =
 INCLUDES = $(addprefix --include $(PREFIX_NAME)_,$(notdir $(INCV_SOURCES:.v=.h))) -include $(PREFIX_NAME).h -include $(PREFIX_NAME)___024root.h
 CPPFLAGS += $(INCLUDES)
 CROSS_COMPILE=riscv32-linux-
+BINARY_OFFSET=1000
 
 .PHONY: tests
 
@@ -32,13 +33,14 @@ tests:
 run_tests: all tests
 	./$(PREFIX_NAME)
 
-example: src/example.s src/example.lds src/example.c
-	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/example.s -o $(BUILD_DIR)/example_start.o
-	$(TARGET_CC) -march=rv32izicsr -O2 -mabi=ilp32 -Wall -Wno-array-bounds -Wno-unused-function -c src/example.c -o $(BUILD_DIR)/example.o
-	$(TARGET_LD) --gc-sections -T src/example.lds $(BUILD_DIR)/example_start.o $(BUILD_DIR)/example.o -o $(BUILD_DIR)/example.elf
-
-	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/example.elf system.mem
-	sed -i s/@.*//g system.mem
+ramflash: src/ramflash.s src/ramflash.lds src/ramflash.c system
+	$(CROSS_COMPILE)objcopy -O binary $(BUILD_DIR)/system.elf $(BUILD_DIR)/system.bin
+	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/ramflash.s -o $(BUILD_DIR)/ramflash_start.o
+	$(TARGET_CC) -march=rv32izicsr -O2 -mabi=ilp32 -Wall -Wno-array-bounds -Wno-unused-function -c src/ramflash.c -DBINARY_SIZE=$(shell du $(BUILD_DIR)/test.bin | sed 's/\t.*//g') -DBINARY_OFFSET=$(BINARY_OFFSET) -o $(BUILD_DIR)/ramflash.o
+	$(TARGET_LD) --gc-sections -T src/ramflash.lds $(BUILD_DIR)/ramflash_start.o $(BUILD_DIR)/ramflash.o -o $(BUILD_DIR)/ramflash.elf
+	$(CROSS_COMPILE)objcopy -O binary $(BUILD_DIR)/ramflash.elf $(BUILD_DIR)/ramflash.bin
+	truncate -s $(BINARY_OFFSET) $(BUILD_DIR)/ramflash.bin
+	cat $(BUILD_DIR)/system.bin >> $(BUILD_DIR)/ramflash.bin
 
 system: src/system.S src/system.c src/system.lds
 	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/system.S -o $(BUILD_DIR)/system_start.o

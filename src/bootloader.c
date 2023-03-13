@@ -18,7 +18,7 @@ static void sendback(size_t i);
 static void bootprompt(void);
 
 void boot(void) {
-	printS("Enter Size in 32bit hex or press b to boot\n\r");
+	printS("Enter Size in 32bit hex or press b to bofort\n\r");
 	static char s[9];
 	uint32_t size;
 	uint32_t i = 0;
