@@ -126,17 +126,17 @@ end
 /* ALU decode start */
 	always_comb begin
 		// use add imm for 1100111 AKA JALR
-		if(instruction[5] && op != 7'b1100111 && !mem_access)
+		unique if(instruction[5] && op != 7'b1100111 && !mem_access)
 			aluRB = rd1;
-		else if (pwrite)
+		else if (pwrite && mem_access)
 			aluRB = imm_s;
 		else
 			aluRB = imm_i;
 
 		// use extra ops for SRAI/SRA and non-imm(sub/add)
-		if (mem_access)
+		unique if (mem_access)
 			alu_op = 4'b0000;
-		else if (sub_op == 5 || op == 7'b0110011)
+		else if (!mem_access && (sub_op == 5 || op == 7'b0110011))
 			alu_op = {instruction[30],sub_op};
 		else
 			alu_op = {1'b0,sub_op};
@@ -147,7 +147,7 @@ end
 
 /* Decode instruction groups start */
 	always_comb begin
-		casez (odata[6:0])
+		unique casez (odata[6:0])
 			7'b0100011: begin // STORE
 				op_jmp = 1;
 			end
@@ -180,8 +180,8 @@ end
 
 /* Microop PC start */
 	always_comb begin
-		if(load_insr)
-			microop_addr = {op_jmp,3'b0};
+		unique if(load_insr)
+			microop_addr = {op_jmp[2:0], microop_pc[3:0]};
 		/* Don't interrupt if we are in the interrupt handler */
 		else if(microop_pc == 0 && interrupt && pc > 'h1000)
 			microop_addr = 3*8; // System
@@ -194,7 +194,7 @@ end
 /* LUI/AUIPC/JAL/BRANCH start */
 	reg [31:0] LAJ_val;
 	always_comb begin
-		if(lui_flag && odata[5])
+		unique if(lui_flag && odata[5])
 			LAJ_val = imm_u;
 		else if(jal_flag)
 			LAJ_val = oldpc + imm_j;
@@ -206,7 +206,7 @@ end
 /* LUI/AUIPC/JAL end */
 
 /* CPU start */
-	always @(posedge clk) begin
+	always_ff @(posedge clk) begin
 		if(rts) begin
 			pc <= 0;
 			APB_paddr <= 0;
@@ -219,7 +219,7 @@ end
 				instruction <= odata;
 				if(odata == 32'b0) halt <= 1;
 				microop <= microop_prog[microop_addr];
-				if(lui_flag) begin
+				unique if(lui_flag) begin
 					regfile[odata[11:7]] <= LAJ_val;
 				end
 				else if(jal_flag) begin
@@ -235,7 +235,7 @@ end
 				if(APB_Dready)
 					microop <= microop_prog[microop_addr];
 
-				if(microop_pc == 0) begin
+				unique if(microop_pc == 0) begin
 					instruction <= 0;
 					APB_paddr <= pc;
 					pc <= pc + 4;
@@ -245,7 +245,7 @@ end
 					APB_pdata <= rd1;
 					if(APB_penable && APB_psel && APB_pready && !APB_pwrite) begin
 						if(sub_op[2] == 1'b0) begin
-							unique case (sub_op[1:0])
+							case (sub_op[1:0])
 								2'b00: regfile[wa] <= {{24{odata[7]}},odata[7:0]};
 								2'b01: regfile[wa] <= {{16{odata[15]}},odata[15:0]};
 								2'b10: regfile[wa] <= odata;
@@ -271,6 +271,8 @@ end
 						pc <= alu_out;
 						regfile[odata[11:7]] <= pc;
 					end
+				end else begin
+					// else do nothing so verilator doesn't complain
 				end
 			end
 		end
