@@ -1,5 +1,3 @@
-/* verilator lint_off UNUSEDSIGNAL */
-
 module sram
 	#(parameter FILE = "test.mem",
 		parameter ADDR_WIDTH = 32,
@@ -23,53 +21,52 @@ reg [DATA_WIDTH-1:0] mem[0:RAM_SIZE-1];
 initial begin
 	$readmemh(FILE, mem);
 end
-always_comb begin: read_process
-	unique case(paddr[1:0])
-		2'b00: prdata = mem[{2'b0, paddr[ADDR_WIDTH-1:2]}];
-		2'b01: begin
-			prdata[23:0] = mem[{2'b0, paddr[ADDR_WIDTH-1:2]}][31:8];
-			prdata[31:24] = mem[{2'b0, paddr[ADDR_WIDTH-1:2]} + 1][7:0];
-		end
-		2'b10: begin
-			prdata[15:0] = mem[{2'b0, paddr[ADDR_WIDTH-1:2]}][31:16];
-			prdata[31:16] = mem[{2'b0, paddr[ADDR_WIDTH-1:2]} + 1][15:0];
-		end
-		2'b11: begin
-			prdata[7:0] = mem[{2'b0, paddr[ADDR_WIDTH-1:2]}][31:24];
-			prdata[31:8] = mem[{2'b0, paddr[ADDR_WIDTH-1:2]} + 1][23:0];
-		end
-	endcase
-end
+wire [7:0]mask = {4'b0, pstb[3:0]};
+wire [31:0]mem_addr = {2'b0, paddr[ADDR_WIDTH-1:2]};
+wire [31:0]offset = {30'b0,paddr[1:0]};
 
-assign pready = penable && psel;
+reg [1:0]done;
+
+assign pready = penable && psel && done[1];
 assign perr = 0;
-always @(posedge pclk) begin: write_process
-	if(psel && penable && pwrite) begin
-		for( i = 0; i < (ADDR_WIDTH/8);i = i + 1) begin
-			if(pstb[i]) begin
-				unique case(paddr[1:0])
-					2'b00: mem[{2'b0,paddr[ADDR_WIDTH-1:2]}][8*i+:8] <= pdata[8*i+:8];
-					2'b01: begin
-						if(i < 3)
-							mem[{2'b0,paddr[ADDR_WIDTH-1:2]}][8*(i+1)+:8] <= pdata[8*i+:8];
-						else
-							mem[{2'b0,paddr[ADDR_WIDTH-1:2]}+1][8*(i-3)+:8] <= pdata[8*i+:8];
-					end
-					2'b10: begin
-						if(i < 2)
-							mem[{2'b0,paddr[ADDR_WIDTH-1:2]}][8*(i+2)+:8] <= pdata[8*i+:8];
-						else
-							mem[{2'b0,paddr[ADDR_WIDTH-1:2]}+1][8*(i-2)+:8] <= pdata[8*i+:8];
-					end
-					2'b11: begin
-						if(i < 1)
-							mem[{2'b0,paddr[ADDR_WIDTH-1:2]}][8*(i+3)+:8] <= pdata[8*i+:8];
-						else
-							mem[{2'b0,paddr[ADDR_WIDTH-1:2]}+1][8*(i-1)+:8] <= pdata[8*i+:8];
-					end
+always @(posedge pclk) begin
+	if(psel && penable) begin
+		if(paddr[1:0] != 2'b00)
+			done <= done + 1;
+		else
+			done <= 2;
+		if(pwrite) begin
+			if(done == 0) begin
+				for( i = 0; i < (ADDR_WIDTH/8);i = i + 1) begin
+					if(mask[i])
+						mem[mem_addr][8*(i+offset)+:8] <= pdata[8*i+: 8];
+				end
+			end else if (done == 1) begin
+				for( i = 0; i < (ADDR_WIDTH/8);i = i + 1) begin
+					if(mask[i+offset])
+						mem[mem_addr][8*i+:8] <= pdata[8*(i+offset)+: 8];
+				end
+			end
+		end else begin
+			if(done == 0) begin
+				case(paddr[1:0])
+					2'b00: prdata <= mem[mem_addr];
+					2'b01: prdata[23:0] <= mem[mem_addr][31:8];
+					2'b10: prdata[15:0] <= mem[mem_addr][31:16];
+					2'b11: prdata[7:0] <= mem[mem_addr][31:24];
+				endcase
+			end else if (done == 1) begin
+				case(paddr[1:0])
+					2'b00: ;
+					2'b01: prdata[31:24] <= mem[mem_addr + 1][7:0];
+					2'b10: prdata[31:16] <= mem[mem_addr + 1][15:0];
+					2'b11: prdata[31:8] <= mem[mem_addr + 1][23:0];
 				endcase
 			end
 		end
+	end
+	if(done == 2) begin
+		done <= 0;
 	end
 end
 endmodule
