@@ -44,6 +44,11 @@ module cpu
 	wire [6:0] microop_pc = microop[15:9];
 	reg [6:0] microop_addr;
 initial begin
+	pc = 0;
+	APB_paddr = 0;
+	microop = 0;
+	halt = 0;
+	instruction = 0;
 	$readmemh("microop.mem", microop_prog);
 end
 /* Microcode end */
