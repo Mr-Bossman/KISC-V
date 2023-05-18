@@ -1,3 +1,4 @@
+`include "sys.v"
 /* verilator lint_off UNUSEDSIGNAL */
 
 module uart
@@ -18,7 +19,7 @@ module uart
 		input [7:0]char_in,
 		output reg read);
 
-always_comb begin
+`always_comb_sys begin
 	if(paddr == 32'h10000005) begin
 		if(char_in == 0)
 			prdata = 32'h00000060;
@@ -35,7 +36,7 @@ always @(posedge pclk) begin
 	if(psel && penable && !ready) begin
 		if(paddr == 32'h10000000) begin
 			if (pwrite) begin
-				unique case(paddr[1:0])
+				`unique_sys case(paddr[1:0])
 						2'b00: $write("%c",pdata[7:0]);
 						2'b01: $write("%c",pdata[15:8]);
 						2'b10: $write("%c",pdata[23:16]);

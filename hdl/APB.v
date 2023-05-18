@@ -1,3 +1,4 @@
+`include "sys.v"
 /* verilator lint_off UNUSEDSIGNAL */
 
 module APB
@@ -52,7 +53,8 @@ module APB
 		$display("Access fault: %h", paddr);
 	end
 
-	always_comb begin
+	`always_comb_sys begin
+		// `unique_sys verilator complains about this
 		if(paddr >= 'h80000000) begin // SRAM
 			access_fault = 0;
 			uart_sel = 0;

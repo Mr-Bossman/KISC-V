@@ -1,3 +1,4 @@
+`include "sys.v"
 module cpu
 	#(parameter ADDR_WIDTH = 32,
 	  parameter DATA_WIDTH = 32)
@@ -91,9 +92,9 @@ end
 /* Instruction operands end */
 
 /* Read/Write mask */
-	always_comb begin
+	`always_comb_sys begin
 		if(mem_access) begin
-			unique case (sub_op[1:0])
+			`unique_sys case (sub_op[1:0])
 				2'b00: dsize = 4'b0001;
 				2'b01: dsize = 4'b0011;
 				2'b10: dsize = 4'b1111;
@@ -106,7 +107,7 @@ end
 /* Read/Write mask end */
 /* READ byte mask start */
 	integer i;
-	always_comb begin
+	`always_comb_sys begin
 		for( i = 0; i <= (32/8)-1;i = i + 1) begin
 			if(dsize[i]) odata[8*i+:8] = APB_prdata[8*i+:8];
 			else odata[8*i+:8] = 8'b0;
@@ -124,9 +125,9 @@ end
 /* debug end */
 
 /* ALU decode start */
-	always_comb begin
+	`always_comb_sys begin
 		// use add imm for 1100111 AKA JALR
-		unique if(instruction[5] && op != 7'b1100111 && !mem_access)
+		`unique_sys if(instruction[5] && op != 7'b1100111 && !mem_access)
 			aluRB = rd1;
 		else if (pwrite && mem_access)
 			aluRB = imm_s;
@@ -134,7 +135,7 @@ end
 			aluRB = imm_i;
 
 		// use extra ops for SRAI/SRA and non-imm(sub/add)
-		unique if (mem_access)
+		`unique_sys if (mem_access)
 			alu_op = 4'b0000;
 		else if (!mem_access && (sub_op == 5 || op == 7'b0110011))
 			alu_op = {instruction[30],sub_op};
@@ -146,8 +147,8 @@ end
 /* ALU decode end */
 
 /* Decode instruction groups start */
-	always_comb begin
-		unique casez (odata[6:0])
+	`always_comb_sys begin
+		`unique_sys casez (odata[6:0])
 			7'b0100011: begin // STORE
 				op_jmp = 1;
 			end
@@ -179,8 +180,8 @@ end
 	end
 
 /* Microop PC start */
-	always_comb begin
-		unique if(load_insr)
+	`always_comb_sys begin
+		`unique_sys if(load_insr)
 			microop_addr = {op_jmp[2:0], microop_pc[3:0]};
 		/* Don't interrupt if we are in the interrupt handler */
 		else if(microop_pc == 0 && interrupt && pc > 'h1000)
@@ -193,8 +194,8 @@ end
 
 /* LUI/AUIPC/JAL/BRANCH start */
 	reg [31:0] LAJ_val;
-	always_comb begin
-		unique if(lui_flag && odata[5])
+	`always_comb_sys begin
+		`unique_sys if(lui_flag && odata[5])
 			LAJ_val = imm_u;
 		else if(jal_flag)
 			LAJ_val = oldpc + imm_j;
@@ -206,7 +207,7 @@ end
 /* LUI/AUIPC/JAL end */
 
 /* CPU start */
-	always_ff @(posedge clk) begin
+	`always_ff_sys @(posedge clk) begin
 		if(rts) begin
 			pc <= 0;
 			APB_paddr <= 0;
@@ -219,7 +220,7 @@ end
 				instruction <= odata;
 				if(odata == 32'b0) halt <= 1;
 				microop <= microop_prog[microop_addr];
-				unique if(lui_flag) begin
+				`unique_sys if(lui_flag) begin
 					regfile[odata[11:7]] <= LAJ_val;
 				end
 				else if(jal_flag) begin
@@ -235,7 +236,7 @@ end
 				if(APB_Dready)
 					microop <= microop_prog[microop_addr];
 
-				unique if(microop_pc == 0) begin
+				`unique_sys if(microop_pc == 0) begin
 					instruction <= 0;
 					APB_paddr <= pc;
 					pc <= pc + 4;

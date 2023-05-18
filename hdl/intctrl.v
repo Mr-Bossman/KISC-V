@@ -1,3 +1,4 @@
+`include "sys.v"
 /* verilator lint_off UNUSEDSIGNAL */
 
 module intctrl
@@ -25,7 +26,7 @@ module intctrl
 	/* APB is non-maskable interrupt */
 	assign cpu_interrupt = ((peding_int & int_mask) != 0) || APB_perr;
 	assign perr = 0;
-	always_comb begin
+	`always_comb_sys begin
 		if(paddr  == 'h20000000) begin
 			prdata = peding_int;
 		end else if (paddr == 'h20000004) begin
