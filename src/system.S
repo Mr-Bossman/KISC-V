@@ -11,6 +11,8 @@ interrupt:
 	.word _start
 reason_code:
 	.word 0x00
+sys_var:
+	.word 0x00
 reg_store:
 	.fill 32, 4
 _exit_:
