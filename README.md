@@ -12,6 +12,7 @@
  - Download and compile the lastest Binutils and gcc
 ```bash
 git submodule update --init --recursive
+./dl_toolchain.sh
 make CROSS_COMPILE=riscv32-unknown-elf- run_tests
 make CROSS_COMPILE=riscv32-unknown-elf- testkern
 ```
@@ -30,9 +31,7 @@ https://github.com/riscv-collab/riscv-gnu-toolchain/releases/tag/2023.06.09
 
 riscv32-elf-ubuntu-22.04-nightly-2023.06.09-nightly.tar.gz
 
-### To use older verilators':
-Remove `--assert` from verilator's paramaters in the Makefile
-
+Verilator has a few bugs in older verisons so you can't run `make VFLAGS='--assert'`
 
 ### Older version of binutils:
 objcopy doesnt work when using `--verilog-data-width=4 --reverse-bytes=4` when converting from

@@ -5,22 +5,27 @@ CC = gcc
 TARGET_LD = $(CROSS_COMPILE)ld
 CXX = g++
 CPPFLAGS = -DVPREFIX=$(PREFIX_NAME) -O3
+VFLAGS =
 LDFLAGS =
 CPP_SOURCES = src/test.cpp
 V_SOURCES = hdl/sram.v hdl/cpu.v hdl/alu.v hdl/APB.v hdl/uart.v hdl/soc_top.v hdl/intctrl.v hdl/timer.v
 INCV_SOURCES =
 INCLUDES = $(addprefix --include $(PREFIX_NAME)_,$(notdir $(INCV_SOURCES:.v=.h))) -include $(PREFIX_NAME).h -include $(PREFIX_NAME)___024root.h
 CPPFLAGS += $(INCLUDES)
-CROSS_COMPILE=riscv32-linux-
+CROSS_COMPILE = riscv32-unknown-elf-
+PATH := $(PATH):$(shell pwd)/riscv/bin
 
 .PHONY: tests
 
-all: $(PREFIX_NAME)
+all: $(PREFIX_NAME) system
 
-$(PREFIX_NAME): $(V_SOURCES) $(CPP_SOURCES) system
-	verilator --assert -Wall --Mdir $(BUILD_DIR) -Ihdl -DSYSTEM_VERILOG_2012 -cc $(V_SOURCES) -prefix $(PREFIX_NAME) -CFLAGS "$(CPPFLAGS)" $(CPP_SOURCES) --exe --top-module soc_top
+$(PREFIX_NAME): $(V_SOURCES) $(CPP_SOURCES)
+	verilator $(VFLAGS) -Wall --Mdir $(BUILD_DIR) -Ihdl -DSYSTEM_VERILOG_2012 -cc $(V_SOURCES) -prefix $(PREFIX_NAME) -CFLAGS "$(CPPFLAGS)" $(CPP_SOURCES) --exe --top-module soc_top
 	$(MAKE) -C $(BUILD_DIR) -f $(PREFIX_NAME).mk $(PREFIX_NAME)
 	cp $(BUILD_DIR)/$(PREFIX_NAME) .
+
+icarus: $(V_SOURCES) system
+	iverilog -o $(PREFIX_NAME) -g2012 -DSYSTEM_VERILOG_2012_ICARUS -Ihdl hdl/alu.v hdl/cpu.v hdl/intctrl.v  hdl/APB.v hdl/uart.v hdl/timer.v hdl/sram.v hdl/soc_top_iverilog.v
 
 run: all
 	./$(PREFIX_NAME)
