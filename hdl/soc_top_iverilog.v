@@ -56,13 +56,21 @@ module soc_top
 	reg clk;
 
 initial begin
-	$monitor("halted=%b",halted);
+	$dumpfile("test.vcd");
+	$dumpvars(0,soc_top);
 	clk = 0;
 	rts = 0;
 	#2 rts = 1;
 	#4 rts = 0;
 end
+
+always @(halted) begin
+	$display("halted=%b",halted);
+	$finish();
+end
+
 always #1 clk = ~clk;
+
 	cpu	riscv_cpu(clk,APB_paddr,APB_pdata,APB_prdata,APB_psel,APB_penable,APB_pwrite,
 			  APB_pstb,APB_pready,APB_perr,cpu_interrupt,rts,halted,odat,oldpc);
 	APB	apb_bus(clk,APB_paddr,APB_pdata,APB_prdata,APB_psel,APB_penable,APB_pwrite,

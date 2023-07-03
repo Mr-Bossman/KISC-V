@@ -43,12 +43,16 @@ module cpu
 	reg [15:0] microop;
 	wire [6:0] microop_pc = microop[15:9];
 	reg [6:0] microop_addr;
+integer b;
 initial begin
 	pc = 0;
 	APB_paddr = 0;
 	microop = 0;
 	halt = 0;
 	instruction = 0;
+	for (b = 0; b < 32; b = b + 1) begin
+		regfile[i] = 0;
+	end
 	$readmemh("microop.mem", microop_prog);
 end
 /* Microcode end */

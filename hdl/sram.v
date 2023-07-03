@@ -19,6 +19,7 @@ module sram
 integer i;
 reg [DATA_WIDTH-1:0] mem[0:RAM_SIZE-1];
 initial begin
+	done = 0;
 	$readmemh(FILE, mem);
 end
 wire [7:0]mask = {4'b0, pstb[3:0]};
