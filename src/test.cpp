@@ -13,6 +13,12 @@ static uint64_t instruction_count = 0;
 static uint64_t clock_count = 0;
 static VPREFIX* sim = NULL;
 
+static void dump(){
+	FILE *fp = fopen("dump.bin","w+");
+	printf("Dumping memory to dump.bin of size 0x%04x\n",sizeof(sim->rootp->soc_top__DOT__ram__DOT__mem));
+	fwrite(&sim->rootp->soc_top__DOT__ram__DOT__mem[0],1,sizeof(sim->rootp->soc_top__DOT__ram__DOT__mem),fp);
+	fclose(fp);
+}
 static void exit_now(int signo){
 	puts("\n\n");
 	for(int i = 0; i < 32;i++){
@@ -24,18 +30,13 @@ static void exit_now(int signo){
 	for(int i = 0; i < 10;i++){
 		printf("sys_mem 0x%02x: 0x%08lx\n",i*4,sim->rootp->soc_top__DOT__system__DOT__mem[i]);
 	}
+	//dump();
 	sim->final();
 	delete sim;
 	printf("IPC: %lf instructions/clock\nCPI: %lf clock/instructions, count %d\n",(double)instruction_count/clock_count,(double)clock_count/instruction_count, instruction_count);
 	exit(signo);
 }
 
-static void dump(){
-	FILE *fp = fopen("dump.bin","w+");
-	printf("Dumping memory to dump.bin of size 0x%04x\n",sizeof(sim->rootp->soc_top__DOT__ram__DOT__mem));
-	fwrite(&sim->rootp->soc_top__DOT__ram__DOT__mem[0],1,sizeof(sim->rootp->soc_top__DOT__ram__DOT__mem),fp);
-	fclose(fp);
-}
 
 char get_console() {
 	int byteswaiting, rread;
