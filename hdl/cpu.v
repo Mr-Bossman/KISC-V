@@ -51,7 +51,7 @@ initial begin
 	halt = 0;
 	instruction = 0;
 	for (b = 0; b < 32; b = b + 1) begin
-		regfile[i] = 0;
+		regfile[b] = 0;
 	end
 	$readmemh("microop.mem", microop_prog);
 end
