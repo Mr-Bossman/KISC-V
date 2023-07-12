@@ -47,7 +47,9 @@ system: src/system.S src/system.c src/system.lds
 	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/system.S -o $(BUILD_DIR)/system_start.o
 	$(TARGET_CC) -march=rv32izicsr -O2 -mabi=ilp32 -Wall -Wno-array-bounds -Wno-unused-function -c src/system.c -o $(BUILD_DIR)/system.o
 	$(TARGET_LD) --gc-sections -T src/system.lds $(BUILD_DIR)/system_start.o $(BUILD_DIR)/system.o -o $(BUILD_DIR)/system.elf
-	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/system.elf system.mem
+	$(CROSS_COMPILE)objcopy -Obinary $(BUILD_DIR)/system.elf $(BUILD_DIR)/system.bin
+	truncate -s 65536 $(BUILD_DIR)/system.bin
+	$(CROSS_COMPILE)objcopy -Ibinary -O verilog --verilog-data-width=4 --reverse-bytes=4 $(BUILD_DIR)/system.bin system.mem
 	sed -i s/@.*//g system.mem
 
 testkern: all
