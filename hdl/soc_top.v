@@ -1,7 +1,7 @@
 module soc_top
 	#(parameter ADDR_WIDTH = 32,
 	  parameter DATA_WIDTH = 32)
-	(input clk, input rts,output halted,
+	(input clk, input APB_PRESETn,output halted,
 	output [31:0]odat,output [31:0] oldpc, input [7:0]char_in,output read);
 
 	wire [ADDR_WIDTH-1:0] APB_paddr;
@@ -52,27 +52,31 @@ initial begin
 	$dumpvars(0, soc_top);
 end
 
-	cpu	riscv_cpu(clk,APB_paddr,APB_pdata,APB_prdata,APB_psel,APB_penable,APB_pwrite,
-			  APB_pstb,APB_pready,APB_perr,cpu_interrupt,rts,halted,odat,oldpc);
-	APB	apb_bus(clk,APB_paddr,APB_pdata,APB_prdata,APB_psel,APB_penable,APB_pwrite,
-			APB_pstb,APB_pready,APB_perr,
-			sram_sel,sram_enable,sram_data,sram_ready,sram_perr,
-			uart_sel,uart_enable,uart_data,uart_ready,uart_perr,
-			system_sel,system_enable,system_data,system_ready,system_perr,
-			intc_sel,intc_enable,intc_data,intc_ready,intc_perr,
-			timer_sel,timer_enable,timer_data,timer_ready,timer_perr);
+	cpu	riscv_cpu(clk, APB_PRESETn, APB_paddr, APB_pdata, APB_prdata, APB_psel, APB_penable,
+			  APB_pwrite, APB_pstb, APB_pready, APB_perr, cpu_interrupt, halted,
+			  odat,oldpc);
+	APB	apb_bus(clk, APB_paddr, APB_pdata, APB_prdata, APB_psel, APB_penable, APB_pwrite,
+			APB_pstb, APB_pready, APB_perr,
+			sram_sel, sram_enable, sram_data, sram_ready, sram_perr,
+			uart_sel, uart_enable, uart_data, uart_ready, uart_perr,
+			system_sel, system_enable, system_data, system_ready, system_perr,
+			intc_sel, intc_enable, intc_data, intc_ready, intc_perr,
+			timer_sel, timer_enable, timer_data, timer_ready, timer_perr);
 
-	intctrl	interrupt_controller(clk,APB_paddr,APB_pdata,intc_data,intc_sel,intc_enable,
-				     APB_pwrite,APB_pstb,intc_ready,intc_perr,
-				     cpu_interrupt,APB_perr,timer_interrupt);
-	timer	sys_timer(clk,APB_paddr,APB_pdata,timer_data,timer_sel,timer_enable,APB_pwrite,
-			  APB_pstb,timer_ready,timer_perr,timer_interrupt);
+	intctrl	interrupt_controller(clk, APB_PRESETn, APB_paddr, APB_pdata, intc_data, intc_sel,
+				     intc_enable, APB_pwrite, APB_pstb, intc_ready, intc_perr,
+				     cpu_interrupt, APB_perr, timer_interrupt);
+	timer	sys_timer(clk, APB_PRESETn, APB_paddr, APB_pdata, timer_data, timer_sel,
+			  timer_enable, APB_pwrite, APB_pstb, timer_ready, timer_perr,
+			  timer_interrupt);
 
-	sram	#(.FILE("test.mem"), .RAM_SIZE('h1000000))ram(clk,{1'b0,APB_paddr[30:0]},APB_pdata,
-		sram_data,sram_sel,sram_enable,APB_pwrite,APB_pstb,sram_ready,sram_perr);
-	sram	#(.FILE("system.mem"), .RAM_SIZE('h10000))system(clk,APB_paddr,APB_pdata,system_data,
-		system_sel,system_enable,APB_pwrite,APB_pstb,system_ready,system_perr);
+	sram	#(.FILE("test.mem"), .RAM_SIZE('h1000000))ram(clk, {1'b0,APB_paddr[30:0]},
+			APB_pdata, sram_data, sram_sel, sram_enable, APB_pwrite, APB_pstb,
+			sram_ready, sram_perr);
+	sram	#(.FILE("system.mem"), .RAM_SIZE('h10000))system(clk, APB_paddr, APB_pdata,
+			system_data, system_sel, system_enable, APB_pwrite, APB_pstb, system_ready,
+			system_perr);
 
-	uart	console(clk,APB_paddr,APB_pdata,uart_data,uart_sel,uart_enable,APB_pwrite,
-			APB_pstb,uart_ready,uart_perr,char_in,read);
+	uart	console(clk, APB_paddr, APB_pdata, uart_data, uart_sel, uart_enable, APB_pwrite,
+			APB_pstb, uart_ready, uart_perr, char_in, read);
 endmodule

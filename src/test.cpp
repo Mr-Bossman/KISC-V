@@ -54,11 +54,11 @@ int main(int argc, char **argv, char **env) {
 	signal(SIGINT, exit_now);
 	Verilated::commandArgs(argc, argv);
 	sim = new VPREFIX;
-	sim->rts = 0;
+	sim->APB_PRESETn = 1;
 	sim->eval();
-	sim->rts = 1;
+	sim->APB_PRESETn = 0;
 	sim->eval();
-	sim->rts = 0;
+	sim->APB_PRESETn = 1;
 	uint32_t oldpc = sim->oldpc;
 	char char_in = 0;
 	bool read = false;

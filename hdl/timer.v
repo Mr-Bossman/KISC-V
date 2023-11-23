@@ -5,7 +5,8 @@ module timer
 	#(parameter ADDR_WIDTH = 32,
 	  parameter DATA_WIDTH = 32)
 	(
-		input pclk,
+		input APB_PCLK,
+		input APB_PRESETn,
 		input [ADDR_WIDTH-1:0] paddr,
 		input [DATA_WIDTH-1:0] pdata,
 		output reg [DATA_WIDTH-1:0] prdata,
@@ -31,7 +32,7 @@ module timer
 		end
 	end
 
-	always @(posedge pclk) begin
+	always @(posedge APB_PCLK) begin
 		if(psel && penable && !pready) begin
 			if (pwrite) begin
 				if(paddr == 'h11004004) begin
@@ -47,7 +48,7 @@ module timer
 
 	reg [32:0]tick_clock = 0;
 	reg tick = 0;
-	always @(posedge pclk) begin
+	always @(posedge APB_PCLK) begin
 		if(tick_clock == 1000)begin
 			tick <= 1;
 			tick_clock <= 0;

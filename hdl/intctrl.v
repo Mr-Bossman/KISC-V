@@ -5,7 +5,8 @@ module intctrl
 	#(parameter ADDR_WIDTH = 32,
 	  parameter DATA_WIDTH = 32)
 	(
-		input pclk,
+		input APB_PCLK,
+		input APB_PRESETn,
 		input [ADDR_WIDTH-1:0] paddr,
 		input [DATA_WIDTH-1:0] pdata,
 		output reg [DATA_WIDTH-1:0] prdata,
@@ -36,7 +37,7 @@ module intctrl
 		end
 	end
 
-	always @(posedge pclk) begin
+	always @(posedge APB_PCLK) begin
 		peding_int <= peding_int | {30'b0,timer_int,APB_perr};
 		if(psel && penable && !pready) begin
 			if (pwrite) begin

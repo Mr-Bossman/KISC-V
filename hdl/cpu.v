@@ -2,7 +2,8 @@
 module cpu
 	#(parameter ADDR_WIDTH = 32,
 	  parameter DATA_WIDTH = 32)
-	(input clk,
+	(input APB_PCLK,
+	input APB_PRESETn,
 	output reg [ADDR_WIDTH-1:0] APB_paddr,
 	output reg [DATA_WIDTH-1:0] APB_pdata,
 	input [DATA_WIDTH-1:0] APB_prdata,
@@ -13,7 +14,7 @@ module cpu
 	input APB_pready,
 	input APB_perr,
 	input interrupt,
-	input rts, output halted,
+	output halted,
 	output [31:0]odat,output reg [31:0] oldpc);
 	reg [31:0] pc;
 	/* We dont use ra0 or ra1 */
@@ -216,8 +217,8 @@ end
 /* LUI/AUIPC/JAL end */
 
 /* CPU start */
-	`always_ff_sys @(posedge clk) begin
-		if(rts) begin
+	`always_ff_sys @(posedge APB_PCLK) begin
+		if(!APB_PRESETn) begin
 			pc <= 0;
 			APB_paddr <= 0;
 			microop <= 0;
