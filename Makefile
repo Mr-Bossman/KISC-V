@@ -60,6 +60,13 @@ testkern: all
 	cat $(BUILD_DIR)/test.dtb >> $(BUILD_DIR)/test.bin
 	$(CROSS_COMPILE)objcopy -Ibinary -O verilog --verilog-data-width=4 --reverse-bytes=4 $(BUILD_DIR)/test.bin test.mem
 
+quartus: system
+	unzip -n opencores/opencores.zip -d opencores/
+	cp microop.hex KISCV-quartus/microop.hex
+#endianess swap
+	hexdump -v -e '1/4 "%08x"' -e '"\n"' $(BUILD_DIR)/system.bin | xxd -r -p > $(BUILD_DIR)/system_le.bin
+	srec_cat $(BUILD_DIR)/system_le.bin -Binary -o KISCV-quartus/system.mif -MIF 32
+
 clean_exe:
 	rm -rf $(PREFIX_NAME)
 

@@ -3,3 +3,17 @@ build/*
 RV32emu
 *.mem
 !microop.mem
+opencores/library
+opencores/uart
+KISCV-quartus/*.swp
+KISCV-quartus/*~
+KISCV-quartus/c5_pin_model_dump.txt
+KISCV-quartus/microop.hex
+KISCV-quartus/system.mif
+KISCV-quartus/db
+KISCV-quartus/incremental_db
+KISCV-quartus/output_files
+KISCV-quartus/simulation
+KISCV-quartus/platform_designer
+KISCV-quartus/.qsys_edit
+!KISCV-quartus/.qsys_edit/preferences.xml
