@@ -1,3 +1,7 @@
 [submodule "tests/riscv-tests"]
 	path = tests/riscv-tests
 	url = https://github.com/riscv-software-src/riscv-tests.git
+
+[submodule "opencores/core_sdram_axi4"]
+	path = opencores/core_sdram_axi4
+	url = https://github.com/ultraembedded/core_sdram_axi4.git
