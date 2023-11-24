@@ -1,6 +1,3 @@
-Fix ram, fails tests after 181c26f use synthesizable sram
-Add download and compile tools
-
 use apb to do inalligned accesses
 add apb to AXI4-Light or use AXI4-Light by default
 add exeptions
