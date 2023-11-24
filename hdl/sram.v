@@ -22,7 +22,7 @@ initial begin
 	done = 0;
 	$readmemh(FILE, mem);
 end
-wire [7:0]mask = {4'b0, pstb[3:0]};
+wire [7:0]mask = {4'b0, pstb[3:0]} << paddr[1:0];
 wire [31:0]mem_addr = {2'b0, paddr[ADDR_WIDTH-1:2]};
 wire [31:0]offset = {30'b0,paddr[1:0]};
 
@@ -40,12 +40,13 @@ always @(posedge pclk) begin
 			if(done == 0) begin
 				for( i = 0; i < (ADDR_WIDTH/8);i = i + 1) begin
 					if(mask[i])
-						mem[mem_addr][8*(i+offset)+:8] <= pdata[8*i+: 8];
+						mem[mem_addr][8*i+:8] <= pdata[8*(i-offset)+: 8];
 				end
 			end else if (done == 1) begin
 				for( i = 0; i < (ADDR_WIDTH/8);i = i + 1) begin
-					if(mask[i+offset])
-						mem[mem_addr][8*i+:8] <= pdata[8*(i+offset)+: 8];
+					if(mask[i+4])
+						mem[mem_addr + 1][8*i+:8] <=
+							pdata[8*(i + (4 - offset))+: 8];
 				end
 			end
 		end else begin
