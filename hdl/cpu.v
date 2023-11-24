@@ -15,8 +15,11 @@ module cpu
 	input APB_perr,
 	input interrupt,
 	output halted,
-	output [31:0]odat,output reg [31:0] oldpc);
+	output [31:0] odat,
+	output [31:0] opc);
+	reg [31:0] oldpc;
 	reg [31:0] pc;
+	assign opc = oldpc;
 	/* We dont use ra0 or ra1 */
 	reg [31:0] instruction;
 	reg halt = 0;
@@ -51,6 +54,7 @@ initial begin
 	microop = 0;
 	halt = 0;
 	instruction = 0;
+	oldpc = 0;
 	for (b = 0; b < 32; b = b + 1) begin
 		regfile[b] = 0;
 	end
@@ -223,6 +227,7 @@ end
 			APB_paddr <= 0;
 			microop <= 0;
 			halt <= 0;
+			oldpc <= 0;
 			instruction <= 0;
 		end else if(!halt) begin
 			// halt till APB_pready is ready
