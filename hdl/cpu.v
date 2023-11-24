@@ -54,7 +54,7 @@ initial begin
 	for (b = 0; b < 32; b = b + 1) begin
 		regfile[b] = 0;
 	end
-	$readmemh("microop.mem", microop_prog);
+	$readmemh("microop.hex", microop_prog);
 end
 /* Microcode end */
 
