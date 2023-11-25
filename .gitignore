@@ -3,6 +3,8 @@ build/*
 RV32emu
 *.mem
 !microop.mem
+riscv
+test.vcd
 opencores/library
 opencores/uart
 KISCV-quartus/*.swp
