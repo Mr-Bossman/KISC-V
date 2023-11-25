@@ -1,3 +1,2 @@
-use apb to do inalligned accesses
 add apb to AXI4-Light or use AXI4-Light by default
 add exeptions
