@@ -92,6 +92,6 @@ end
 			system_data, system_sel, system_enable, APB_pwrite, APB_pstb, system_ready,
 			system_perr);
 
-	uart	console(clk, APB_paddr, APB_pdata, uart_data, uart_sel, uart_enable, APB_pwrite,
-			APB_pstb, uart_ready, uart_perr, char_in, read);
+	uart	console(clk, APB_PRESETn, APB_paddr, APB_pdata, uart_data, uart_sel, uart_enable,
+			APB_pwrite, APB_pstb, uart_ready, uart_perr, char_in, read);
 endmodule

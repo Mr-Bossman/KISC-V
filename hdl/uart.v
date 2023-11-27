@@ -5,7 +5,8 @@ module uart
 	#(parameter ADDR_WIDTH = 32,
 		parameter DATA_WIDTH = 32)
 	(
-		input pclk,
+		input APB_PCLK,
+		input APB_PRESETn,
 		input [ADDR_WIDTH-1:0] paddr,
 		input [DATA_WIDTH-1:0] pdata,
 		output reg [DATA_WIDTH-1:0] prdata,
@@ -32,7 +33,7 @@ module uart
 end
 
 assign perr = 0;
-always @(posedge pclk) begin
+always @(posedge APB_PCLK) begin
 	if(psel && penable && !ready) begin
 		if(paddr == 32'h10000000) begin
 			if (pwrite) begin
