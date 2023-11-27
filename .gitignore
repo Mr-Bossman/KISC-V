@@ -5,6 +5,7 @@ RV32emu
 !microop.mem
 riscv
 test.vcd
+transfer
 opencores/library
 opencores/uart
 KISCV-quartus/*.swp

@@ -9,7 +9,7 @@ CPPFLAGS = -DVPREFIX=$(PREFIX_NAME) -O3
 VFLAGS =
 TARGET_CFLAGS = -march=rv32izicsr -mabi=ilp32 -O2 -Wall -Wextra -Wno-array-bounds -Wno-unused-function -Wno-unused-parameter
 TARGET_LDFLAGS = --gc-sections
-TARGET_C_SOURCES = src/simple_lib.c src/system.c src/example.c
+TARGET_C_SOURCES = src/simple_lib.c src/system.c src/bootloader.c src/example.c
 TARGET_S_SOURCES = src/example_start.S src/system_start.S
 TARGET_C_INCLUDES = src/simple_lib.h
 CPP_SOURCES = src/test.cpp
@@ -36,7 +36,7 @@ vpath %.bin $(BUILD_DIR)
 CROSS_COMPILE := riscv32-unknown-elf-
 PATH := $(PATH):$(shell pwd)/riscv/bin
 
-.PHONY: clean all run run_tests tests icarus verilator system example linux quartus clean_exe clean_mem microcode example_system
+.PHONY: clean all run run_tests tests icarus verilator system example linux quartus clean_exe clean_mem microcode example_system bootloader
 
 all: $(TARGET_OBJECTS) $(PREFIX_NAME) system tests microcode
 
@@ -70,9 +70,13 @@ $(BUILD_DIR)/example.bin: example.lds example_start.o example.o simple_lib.o
 	$(TARGET_LD) $(TARGET_LDFLAGS) -T $^ -Ttext $(TEXT_START) -o $(basename $@).elf
 	$(CROSS_COMPILE)objcopy -Obinary $(basename $@).elf $@
 	@echo truncate -s $$(($$(set -- $$(ls -l $@);echo "(($$5+3)/4)*4"))) $@
-	truncate -s $$(($$(set -- $$(ls -l $@);echo "(($$5+3)/4)*4"))) $@
+	@truncate -s $$(($$(set -- $$(ls -l $@);echo "(($$5+3)/4)*4"))) $@
 
-$(BUILD_DIR)/system.bin: system.lds system.o system_start.o
+ifdef BOOTLOADER
+$(BUILD_DIR)/system.bin: bootloader.o
+endif
+
+$(BUILD_DIR)/system.bin: system.lds system.o system_start.o simple_lib.o
 	$(TARGET_LD) $(TARGET_LDFLAGS) -T $^ -o $(basename $@).elf
 	$(TARGET_OBJCOPY) -Obinary $(basename $@).elf $@
 	truncate -s 65536 $@
@@ -97,6 +101,10 @@ test.mem:
 
 system: system.mem
 
+bootloader: transfer
+	rm $(BUILD_DIR)/system.bin || true
+	@$(MAKE) system BOOTLOADER=1 --no-print-directory
+
 example: TEXT_START:=0x80000000
 example: example.mem
 	cp example.mem test.mem
@@ -110,13 +118,16 @@ linux: linux.mem
 
 tests: test.mem
 
-quartus: system.mem opencores/opencores.zip microcode
+quartus: bootloader opencores/opencores.zip microcode
 	unzip -n opencores/opencores.zip -d opencores/
 	cp microop.hex KISCV-quartus/microop.hex
 	cp microop_no_en.hex KISCV-quartus/microop_no_en.hex
 #endianess swap
 	hexdump -v -e '1/4 "%08x"' -e '"\n"' $(BUILD_DIR)/system.bin | xxd -r -p > $(BUILD_DIR)/system_le.bin
 	srec_cat $(BUILD_DIR)/system_le.bin -Binary -o KISCV-quartus/system.mif -MIF 32
+
+transfer: src/transfer.cpp
+	$(CXX) -o transfer src/transfer.cpp
 
 clean_exe:
 	rm -rf $(PREFIX_NAME) *.mem || true
