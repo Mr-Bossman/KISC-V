@@ -8,7 +8,10 @@ CPPFLAGS = -DVPREFIX=$(PREFIX_NAME) -O3
 VFLAGS =
 LDFLAGS =
 CPP_SOURCES = src/test.cpp
-V_SOURCES = hdl/sram.v hdl/apb_align.v hdl/cpu.v hdl/alu.v hdl/APB.v hdl/uart.v hdl/soc_top.v hdl/intctrl.v hdl/timer.v
+V_SOURCES = hdl/sram.v hdl/apb_align.v hdl/cpu.v hdl/alu.v hdl/APB.v hdl/uart.v hdl/intctrl.v hdl/timer.v
+VERILATOR_TOP_FILE = hdl/soc_top.v
+VERILATOR_TOP = soc_top
+ICARUS_TOP_FILE = hdl/soc_top_iverilog.v
 INCV_SOURCES =
 INCLUDES = $(addprefix --include $(PREFIX_NAME)_,$(notdir $(INCV_SOURCES:.v=.h))) -include $(PREFIX_NAME).h -include $(PREFIX_NAME)___024root.h
 CPPFLAGS += $(INCLUDES)
@@ -19,13 +22,13 @@ PATH := $(PATH):$(shell pwd)/riscv/bin
 
 all: $(PREFIX_NAME) system
 
-$(PREFIX_NAME): $(V_SOURCES) $(CPP_SOURCES)
-	verilator $(VFLAGS) -Wall --Mdir $(BUILD_DIR) -Ihdl -DSYSTEM_VERILOG_2012 -cc $(V_SOURCES) -prefix $(PREFIX_NAME) -CFLAGS "$(CPPFLAGS)" $(CPP_SOURCES) --exe --top-module soc_top
+$(PREFIX_NAME): $(V_SOURCES) $(VERILATOR_TOP_FILE) $(CPP_SOURCES)
+	verilator $(VFLAGS) -Wall --Mdir $(BUILD_DIR) -Ihdl -DSYSTEM_VERILOG_2012 -cc $(V_SOURCES) $(VERILATOR_TOP_FILE) -prefix $(PREFIX_NAME) -CFLAGS "$(CPPFLAGS)" $(CPP_SOURCES) --exe --top-module $(VERILATOR_TOP)
 	$(MAKE) -C $(BUILD_DIR) -f $(PREFIX_NAME).mk $(PREFIX_NAME)
 	cp $(BUILD_DIR)/$(PREFIX_NAME) .
 
-icarus: $(V_SOURCES) system
-	iverilog -o $(PREFIX_NAME) -g2012 -DSYSTEM_VERILOG_2012_ICARUS -Ihdl hdl/apb_align.v hdl/alu.v hdl/cpu.v hdl/intctrl.v  hdl/APB.v hdl/uart.v hdl/timer.v hdl/sram.v hdl/soc_top_iverilog.v
+icarus: $(V_SOURCES) $(ICARUS_TOP_FILE) system
+	iverilog -o $(PREFIX_NAME) -g2012 -DSYSTEM_VERILOG_2012_ICARUS -Ihdl $(V_SOURCES) $(ICARUS_TOP_FILE)
 
 run: all
 	./$(PREFIX_NAME)
