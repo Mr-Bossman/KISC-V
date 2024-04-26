@@ -5,36 +5,35 @@ import sys
 class Micro_ops(enum.IntEnum):
 	NOP		= 0x0000,
 	APB_PSEL	= 0x0001,
-	APB_PEN		= 0x0002,
-	APB_WRITE	= 0x0004,
-	LOAD_ISR	= 0x0008,
-	MEM_ACCESS	= 0x0010,
-	ALU_FLAGS	= 0x0020,
-	LOAD_PC		= 0x0040,
-	SYS_LOAD	= 0x0080,
-	ALU_STORE	= 0x0100,
+	APB_WRITE	= 0x0002,
+	LOAD_ISR	= 0x0004,
+	MEM_ACCESS	= 0x0008,
+	ALU_FLAGS	= 0x0010,
+	LOAD_PC		= 0x0020,
+	SYS_LOAD	= 0x0040,
+	ALU_STORE	= 0x0080,
 
 
 LOADINS = [Micro_ops.APB_PSEL,
-	   Micro_ops.APB_PSEL | Micro_ops.APB_PEN | Micro_ops.LOAD_ISR,
+	   Micro_ops.APB_PSEL | Micro_ops.LOAD_ISR,
 	   Micro_ops.NOP]
 
 STORE = [Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
 	 Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
-	 Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE | Micro_ops.APB_PEN,
+	 Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
 	 Micro_ops.NOP]
 
 LOAD = [Micro_ops.MEM_ACCESS,
 	Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS,
-	Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_PEN,
+	Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS,
 	Micro_ops.NOP]
 
 SYSTEM = [Micro_ops.SYS_LOAD,
 	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD,
-	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_PEN,
+	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD,
 	  Micro_ops.NOP,
 	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE,
-	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE | Micro_ops.APB_PEN,
+	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE,
 	  Micro_ops.NOP]
 
 LOADINS_NO_EN = [Micro_ops.APB_PSEL | Micro_ops.LOAD_ISR,
@@ -86,10 +85,10 @@ def gen_opcodes(index, microcode,loadins):
 		else:
 			#top 4 bits are the opcode index next 4 bits are the microcode index
 			#last 8 bits are the microcode
-			code = microcode[i] | (((i+ofs)*0x200) + (index*0x2000))
+			code = microcode[i] | (((i+ofs)*0x100) + (index*0x1000))
 			# end jump to start
 			if(i == len(microcode)-1):
-				code = 0
+				code = microcode[i]
 		ret += "{:04x}\n".format(code)
 	if index == 0:
 		for _ in range(len(loadins)-1):
@@ -115,7 +114,6 @@ def gen_microcode(file_name="microop.hex"):
 	file.write(hex_str)
 	file.close()
 
-
 def gen_microcode_no_en(file_name="microop_no_en.hex"):
 	hex_str = ""
 	file = open(file_name, "w")
@@ -134,7 +132,6 @@ def gen_microcode_no_en(file_name="microop_no_en.hex"):
 
 	file.write(hex_str)
 	file.close()
-
 
 def main():
 	if len(sys.argv) == 3:

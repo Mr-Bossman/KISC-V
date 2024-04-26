@@ -1,4 +1,5 @@
 `include "sys.v"
+`define HAS_APB_PENABLE
 module cpu
 	#(parameter ADDR_WIDTH = 32,
 	  parameter DATA_WIDTH = 32)
@@ -45,7 +46,7 @@ module cpu
 	reg[3:0] op_jmp;
 	reg [15:0] microop_prog[0:127];
 	reg [15:0] microop;
-	wire [6:0] microop_pc = microop[15:9];
+	wire [6:0] microop_pc = microop[14:8];
 	reg [6:0] microop_addr;
 integer b;
 initial begin
@@ -58,30 +59,42 @@ initial begin
 	for (b = 0; b < 32; b = b + 1) begin
 		regfile[b] = 0;
 	end
+`ifdef HAS_APB_PENABLE
 	$readmemh("microop.hex", microop_prog);
+`else
+	$readmemh("microop_no_en.hex", microop_prog);
+`endif
 end
 /* Microcode end */
 
-/* AHB start */
+/* APB start */
+`ifdef HAS_APB_PENABLE
+	reg APB_psel_1clk;
+	assign APB_penable = APB_psel && APB_psel_1clk;
+`else
+	assign APB_penable = APB_psel;
+`endif
 	assign APB_psel = microop[0];
-	assign APB_penable = microop[1];
-	wire pwrite = microop[2];
+	wire pwrite = microop[1];
 	assign APB_pwrite = (pwrite && APB_psel);
 	reg [3:0] dsize;
 	/* APB spec dissalows read Byte mask */
 	assign APB_pstb = (APB_pwrite)?dsize:4'b1111;
-	/* If we are not writing or writing this is high*/
-	wire APB_Dready = !APB_penable || !APB_psel || APB_pready;
+	/* If we are done reading or writing this is high*/
+	wire APB_done = APB_penable && APB_psel && APB_pready;
+	/* If we are not done reading or writing this is high*/
+	/* only need !(APB_penable && APB_psel) || APB_pready; */
+	wire APB_Dready = !(APB_penable && APB_psel) || APB_pready;
 	reg [31:0] odata;
-/* AHB end */
+/* APB end */
 
 /* flags start */
-	wire load_insr = microop[3];
-	wire mem_access = microop[4];
-	wire alu_flags = microop[5];
-	wire load_pc = microop[6];
-	wire sys_load = microop[7];
-	wire store_alu = microop[8];
+	wire load_insr = microop[2];
+	wire mem_access = microop[3];
+	wire alu_flags = microop[4];
+	wire load_pc = microop[5];
+	wire sys_load = microop[6];
+	wire store_alu = microop[7];
 	/* These happen in the same cycle as load_insr */
 /*
 	wire lui_flag = (load_insr)?microop_prog[op_jmp][9]:0;
@@ -199,7 +212,11 @@ end
 			microop_addr = {op_jmp[2:0], microop_pc[3:0]};
 		/* Don't interrupt if we are in the interrupt handler */
 		else if(microop_pc == 0 && interrupt && pc > 'h1000)
+`ifdef HAS_APB_PENABLE
 			microop_addr = 3*16 + 2; // System
+`else
+			microop_addr = 3*16 + 1; // System
+`endif
 		else
 			microop_addr = microop_pc;
 	end
@@ -219,6 +236,14 @@ end
 			LAJ_val = oldpc + imm_u;
 	end
 /* LUI/AUIPC/JAL end */
+
+/* APB_penable start */
+`ifdef HAS_APB_PENABLE
+	`always_ff_sys @(posedge APB_PCLK) begin
+		APB_psel_1clk <= APB_psel;
+	end
+`endif
+/* APB_penable end */
 
 /* CPU start */
 	`always_ff_sys @(posedge APB_PCLK) begin
@@ -259,7 +284,7 @@ end
 				end else if(mem_access) begin
 					APB_paddr <= alu_out;
 					APB_pdata <= rd1;
-					if(APB_penable && APB_psel && APB_pready && !APB_pwrite) begin
+					if(APB_done && !APB_pwrite) begin
 						if(sub_op[2] == 1'b0) begin
 							case (sub_op[1:0])
 								2'b00: regfile[wa] <= {{24{odata[7]}},odata[7:0]};
@@ -273,7 +298,7 @@ end
 				end else if(sys_load) begin
 					APB_paddr <= 4;
 					APB_pdata <= pc;
-					if(APB_penable && APB_psel && APB_pready) begin
+					if(APB_done) begin
 						if(APB_pwrite)
 							pc <= instruction;
 						else
