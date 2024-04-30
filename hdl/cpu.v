@@ -18,8 +18,8 @@ module cpu
 	output halted,
 	output [31:0] odat,
 	output [31:0] opc);
-	reg [31:0] oldpc;
 	reg [31:0] pc;
+	wire [31:0] oldpc = pc - 4;
 	assign opc = oldpc;
 	/* We dont use ra0 or ra1 */
 	reg [31:0] instruction;
@@ -55,7 +55,6 @@ initial begin
 	microop = 0;
 	halt = 0;
 	instruction = 0;
-	oldpc = 0;
 	for (b = 0; b < 32; b = b + 1) begin
 		regfile[b] = 0;
 	end
@@ -89,20 +88,34 @@ end
 /* APB end */
 
 /* flags start */
-	wire load_insr = microop[2];
+	wire load_insr_microop = microop[2];
 	wire mem_access = microop[3];
 	wire alu_flags = microop[4];
-	wire load_pc = microop[5];
+	wire load_pc_microop = microop[5];
 	wire sys_load = microop[6];
 	wire store_alu = microop[7];
-	/* These happen in the same cycle as load_insr */
+	wire microop_pc_zero = (microop_pc == 0);
+
+	wire sys_load_rdy = sys_load && APB_done;
+	wire load_insr_rdy = load_insr_microop && APB_Dready;
+
+	wire load_paddr = sys_load || mem_access || microop_pc_zero;
+	wire load_pdata = sys_load || mem_access;
+
+	wire load_insr = load_insr_rdy || (sys_load_rdy && !APB_pwrite);
+
+	wire sys_load_pc = sys_load_rdy && pwrite;
+	wire load_pc_microop_true = load_pc_microop && (alu_flags && cmp_flag || !alu_flags);
+	wire load_pc = (jal_flag && load_insr_microop && APB_Dready) || (microop_pc_zero || load_pc_microop_true || sys_load_pc);
+
+	/* These happen in the same cycle as load_insr_microop */
 /*
-	wire lui_flag = (load_insr)?microop_prog[op_jmp][9]:0;
-	wire jal_flag = (load_insr)?microop_prog[op_jmp][10]:0;
+	wire lui_flag = (load_insr_microop)?microop_prog[op_jmp][9]:0;
+	wire jal_flag = (load_insr_microop)?microop_prog[op_jmp][10]:0;
 */
 	/* Microcode reads need to be synchronous */
-	wire lui_flag = (load_insr && op_jmp == (0 | 7));
-	wire jal_flag = (load_insr && op_jmp == (8 | 7));
+	wire lui_flag = (load_insr_microop && op_jmp == (0 | 7));
+	wire jal_flag = (load_insr_microop && op_jmp == (8 | 7));
 /* flags end */
 
 /* Instruction operands start */
@@ -110,7 +123,7 @@ end
 	wire [31:0] imm_u = {odata[31:12], 12'b0};
 	assign ra0 = odata[19:15];
 	assign ra1 = odata[24:20];
-	assign wa = instruction[11:7];
+	assign wa = (load_insr_microop || load_pc_microop)? odata[11:7] : instruction[11:7];
 	wire [6:0] op = instruction[6:0];
 	wire [2:0] sub_op = instruction[14:12];
 	wire [31:0] imm_s = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
@@ -208,7 +221,7 @@ end
 
 /* Microop PC start */
 	`always_comb_sys begin
-		`unique_sys if(load_insr)
+		`unique_sys if(load_insr_microop)
 			microop_addr = {op_jmp[2:0], microop_pc[3:0]};
 		/* Don't interrupt if we are in the interrupt handler */
 		else if(microop_pc == 0 && interrupt && pc > 'h1000)
@@ -223,19 +236,103 @@ end
 /* Microop PC end */
 /* Decode instruction groups end */
 
-/* LUI/AUIPC/JAL/BRANCH start */
-	reg [31:0] LAJ_val;
+/* APB_paddr mux start */
+	reg [31:0] APB_paddr_val;
 	`always_comb_sys begin
-		`unique_sys if(lui_flag && odata[5])
-			LAJ_val = imm_u;
-		else if(jal_flag)
-			LAJ_val = oldpc + imm_j;
-		else if(alu_flags)
-			LAJ_val = oldpc + imm_b;
+		`unique_sys if(microop_pc == 0)
+			APB_paddr_val = pc;
+		else if(mem_access)
+			APB_paddr_val = alu_out;
+		else if(sys_load)
+			APB_paddr_val = 4;
 		else
-			LAJ_val = oldpc + imm_u;
+			APB_paddr_val = 32'bX;
 	end
-/* LUI/AUIPC/JAL end */
+/* APB_paddr mux end */
+
+/* APB_pdata mux start */
+	reg [31:0] APB_pdata_val;
+	`always_comb_sys begin
+		`unique_sys if(mem_access)
+			APB_pdata_val = rd1;
+		else if(sys_load)
+			APB_pdata_val = pc;
+		else
+			APB_pdata_val = 32'bX;
+	end
+/* APB_pdata mux end */
+
+/* load_pc mux start */
+	reg [31:0] load_pc_mux;
+	`always_comb_sys begin
+		`unique_sys if(jal_flag)
+			load_pc_mux = oldpc + imm_j;
+		else if(microop_pc == 0)
+			load_pc_mux = pc + 4;
+		else if (sys_load_pc)
+			load_pc_mux = instruction;
+		else if (load_pc_microop && !alu_flags)
+			load_pc_mux = alu_out;
+		else if (load_pc_microop && alu_flags && cmp_flag)
+			load_pc_mux = oldpc + imm_b;
+		else
+			load_pc_mux = 32'bX;
+	end
+/* load_pc mux end */
+
+/* write_reg start */
+	reg write_reg;
+	reg read_reg;
+	`always_comb_sys begin
+		`unique_sys if(load_insr_rdy) begin
+			`unique_sys if(lui_flag || jal_flag) begin
+				read_reg = 0;
+				write_reg = 1;
+			end else begin
+				read_reg = 1;
+				write_reg = 0;
+			end
+		end else begin
+			read_reg = 0;
+			/* `unique_sys is broken in verilator */
+			if(mem_access && APB_done && !APB_pwrite)
+				write_reg = 1;
+			else if(store_alu)
+				write_reg = 1;
+			else if(load_pc_microop && !alu_flags)
+				write_reg = 1;
+			else
+				write_reg = 0;
+		end
+	end
+/* write_reg end */
+
+/* write_reg mux start */
+	reg [31:0] write_reg_mux;
+	`always_comb_sys begin
+		`unique_sys if (store_alu)
+			write_reg_mux = alu_out;
+		else if (load_pc_microop && !alu_flags)
+			write_reg_mux = pc;
+		else if (mem_access && APB_done && !APB_pwrite) begin
+			if(sub_op[2] == 1'b0) begin
+				case (sub_op[1:0])
+					2'b00: write_reg_mux = {{24{odata[7]}},odata[7:0]};
+					2'b01: write_reg_mux = {{16{odata[15]}},odata[15:0]};
+					2'b10: write_reg_mux = odata;
+					default: write_reg_mux = odata;
+				endcase
+			end else
+				write_reg_mux = odata;
+		end
+		else if (jal_flag)
+			write_reg_mux = pc;
+		else if (lui_flag)
+			write_reg_mux = imm_u + ((odata[5])? 0 : oldpc);
+		else
+			write_reg_mux = 32'bX;
+	end
+/* write_reg mux end */
 
 /* APB_penable start */
 `ifdef HAS_APB_PENABLE
@@ -252,69 +349,34 @@ end
 			APB_paddr <= 0;
 			microop <= 0;
 			halt <= 0;
-			oldpc <= 0;
 			instruction <= 0;
 		end else if(!halt) begin
-			// halt till APB_pready is ready
-			if(load_insr && APB_Dready) begin
-				instruction <= odata;
-				if(odata == 32'b0) halt <= 1;
-				microop <= microop_prog[microop_addr];
-				`unique_sys if(lui_flag) begin
-					regfile[odata[11:7]] <= LAJ_val;
-				end
-				else if(jal_flag) begin
-					regfile[odata[11:7]] <= pc;
-					pc <= LAJ_val;
-				end else begin
-					rd0 <= ra0 == 5'b0 ? 0 : regfile[ra0];
-					rd1 <= ra1 == 5'b0 ? 0 : regfile[ra1];
-				end
-			end
-			else begin
-				// halt till APB_pready is ready
-				if(APB_Dready)
-					microop <= microop_prog[microop_addr];
 
-				`unique_sys if(microop_pc == 0) begin
-					instruction <= 0;
-					APB_paddr <= pc;
-					pc <= pc + 4;
-					oldpc <= pc;
-				end else if(mem_access) begin
-					APB_paddr <= alu_out;
-					APB_pdata <= rd1;
-					if(APB_done && !APB_pwrite) begin
-						if(sub_op[2] == 1'b0) begin
-							case (sub_op[1:0])
-								2'b00: regfile[wa] <= {{24{odata[7]}},odata[7:0]};
-								2'b01: regfile[wa] <= {{16{odata[15]}},odata[15:0]};
-								2'b10: regfile[wa] <= odata;
-								default: regfile[wa] <= odata;
-							endcase
-						end else
-							regfile[wa] <= odata;
-					end
-				end else if(sys_load) begin
-					APB_paddr <= 4;
-					APB_pdata <= pc;
-					if(APB_done) begin
-						if(APB_pwrite)
-							pc <= instruction;
-						else
-							instruction <= odata;
-					end
-				end else if(store_alu) regfile[wa] <= alu_out;
-				else if(load_pc) begin
-					if(alu_flags && cmp_flag)
-						pc <= LAJ_val;
-					else if(!alu_flags) begin
-						pc <= alu_out;
-						regfile[odata[11:7]] <= pc;
-					end
-				end else begin
-					// else do nothing so verilator doesn't complain
-				end
+			// halt till APB_Dready is ready
+			if(APB_Dready)
+				microop <= microop_prog[microop_addr];
+
+			if(load_paddr)
+				APB_paddr <= APB_paddr_val;
+
+			if(load_pdata)
+				APB_pdata <= APB_pdata_val;
+
+			if (load_pc)
+				pc <= load_pc_mux;
+
+			if (load_insr)
+				instruction <= odata;
+
+			if(write_reg)
+				regfile[wa] <= write_reg_mux;
+
+			if(load_insr_rdy && odata == 32'b0)
+				halt <= 1;
+
+			if (read_reg) begin
+				rd0 <= ra0 == 5'b0 ? 0 : regfile[ra0];
+				rd1 <= ra1 == 5'b0 ? 0 : regfile[ra1];
 			end
 		end
 	end
