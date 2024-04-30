@@ -99,6 +99,8 @@ end
 	wire sys_load_rdy = sys_load && APB_done;
 	wire load_insr_rdy = load_insr_microop && APB_Dready;
 
+	wire mem_access_rdy = mem_access && APB_done && !APB_pwrite;
+
 	wire load_paddr = sys_load || mem_access || microop_pc_zero;
 	wire load_pdata = sys_load || mem_access;
 
@@ -224,7 +226,7 @@ end
 		`unique_sys if(load_insr_microop)
 			microop_addr = {op_jmp[2:0], microop_pc[3:0]};
 		/* Don't interrupt if we are in the interrupt handler */
-		else if(microop_pc == 0 && interrupt && pc > 'h1000)
+		else if(microop_pc_zero && interrupt && pc > 'h1000)
 `ifdef HAS_APB_PENABLE
 			microop_addr = 3*16 + 2; // System
 `else
@@ -239,7 +241,7 @@ end
 /* APB_paddr mux start */
 	reg [31:0] APB_paddr_val;
 	`always_comb_sys begin
-		`unique_sys if(microop_pc == 0)
+		`unique_sys if(microop_pc_zero)
 			APB_paddr_val = pc;
 		else if(mem_access)
 			APB_paddr_val = alu_out;
@@ -267,7 +269,7 @@ end
 	`always_comb_sys begin
 		`unique_sys if(jal_flag)
 			load_pc_mux = oldpc + imm_j;
-		else if(microop_pc == 0)
+		else if(microop_pc_zero)
 			load_pc_mux = pc + 4;
 		else if (sys_load_pc)
 			load_pc_mux = instruction;
@@ -295,7 +297,7 @@ end
 		end else begin
 			read_reg = 0;
 			/* `unique_sys is broken in verilator */
-			if(mem_access && APB_done && !APB_pwrite)
+			if(mem_access_rdy)
 				write_reg = 1;
 			else if(store_alu)
 				write_reg = 1;
@@ -312,9 +314,9 @@ end
 	`always_comb_sys begin
 		`unique_sys if (store_alu)
 			write_reg_mux = alu_out;
-		else if (load_pc_microop && !alu_flags)
+		else if (load_pc || jal_flag)
 			write_reg_mux = pc;
-		else if (mem_access && APB_done && !APB_pwrite) begin
+		else if (mem_access_rdy) begin
 			if(sub_op[2] == 1'b0) begin
 				case (sub_op[1:0])
 					2'b00: write_reg_mux = {{24{odata[7]}},odata[7:0]};
@@ -325,8 +327,6 @@ end
 			end else
 				write_reg_mux = odata;
 		end
-		else if (jal_flag)
-			write_reg_mux = pc;
 		else if (lui_flag)
 			write_reg_mux = imm_u + ((odata[5])? 0 : oldpc);
 		else
