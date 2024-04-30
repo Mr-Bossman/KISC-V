@@ -39,3 +39,5 @@
 `elsif SYSTEM_VERILOG_2012_ICARUS
 `define DO_DISPLAY
 `endif
+
+`define HAS_APB_PENABLE

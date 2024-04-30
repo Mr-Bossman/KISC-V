@@ -44,6 +44,9 @@ add_fileset_file alu.v VERILOG PATH ../hdl/alu.v
 add_fileset_file axi.v VERILOG PATH ../hdl/axi.v
 add_fileset_file cpu.v VERILOG PATH ../hdl/cpu.v
 add_fileset_file sys.v VERILOG PATH ../hdl/sys.v
+add_fileset_file datapath.v VERILOG PATH ../hdl/datapath.v
+add_fileset_file regfile.v VERILOG PATH ../hdl/regfile.v
+add_fileset_file control_unit.v VERILOG PATH ../hdl/control_unit.v
 add_fileset_file apb_align.v VERILOG PATH ../hdl/apb_align.v
 add_fileset_file APB.v VERILOG PATH ../hdl/APB.v
 add_fileset_file intctrl.v VERILOG PATH ../hdl/intctrl.v
