@@ -11,3 +11,4 @@
 `define always_ff_sys always
 `define unique_sys
 `endif
+//`define HAS_APB_PENABLE
