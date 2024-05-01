@@ -27,9 +27,10 @@ module cpu
 
 /* ALU start */
 	wire [31:0] alu_out;
-	reg [31:0] aluRB;
-	reg [3:0] alu_op;
+	wire [31:0] aluRB;
+	wire [3:0] alu_op;
 	wire cmp_flag;
+	alu alu(alu_op,rs0,aluRB,alu_out,cmp_flag);
 /* ALU end */
 
 /* Regfile start*/
@@ -63,6 +64,9 @@ end
 /* APB end */
 
 /* control_unit start */
+	wire [6:0] op = instruction[6:0];
+	wire [1:0] sub_op_2bit = instruction[13:12];
+
 	wire system_mem = pc > 'h1000;
 	wire load_paddr;
 	wire load_pdata;
@@ -83,15 +87,20 @@ end
 	wire load_branch;
 	wire load_jalr;
 	wire pwrite;
+	wire alu_rs1;
+	wire alu_imm_i;
+
+	// alu immediate
+	wire immediate = op == 7'b0010011;
 
 	control_unit control_unit(APB_PCLK,APB_PRESETn,APB_psel,APB_penable,APB_pwrite,
-	APB_pready,APB_perr,interrupt,system_mem,op_jmp,cmp_flag,
+	APB_pready,APB_perr,interrupt,system_mem,op_jmp,cmp_flag,immediate,
 
 	load_paddr,load_pdata,load_pc,load_insr, write_reg, read_reg,
 
 	wa_mux,mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,
 	sys_load_pc,load_insr_rdy,mem_access_rdy,store_alu,load_branch,
-	load_jalr,pwrite
+	load_jalr,pwrite,alu_rs1,alu_imm_i
 	);
 /* control_unit end */
 
@@ -104,24 +113,21 @@ end
 	datapath datapath(instruction,odata,pc,rs1,alu_out,
 
 	wa_mux,mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,sys_load_pc,
-	mem_access_rdy,store_alu,load_branch,load_jalr,load_pc,
+	mem_access_rdy,store_alu,load_branch,load_jalr,load_pc,alu_rs1,alu_imm_i,
+	pwrite,immediate,
 
-	APB_paddr_val,APB_pdata_val,load_pc_mux,write_reg_mux,wa);
+	APB_paddr_val,APB_pdata_val,load_pc_mux,write_reg_mux,aluRB,alu_op,wa);
 /* datapath end */
 
 /* Instruction operands start */
 	assign ra0 = odata[19:15];
 	assign ra1 = odata[24:20];
-	wire [6:0] op = instruction[6:0];
-	wire [2:0] sub_op = instruction[14:12];
-	wire [31:0] imm_s = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
-	wire [31:0] imm_i = {{21{instruction[31]}}, instruction[30:20]};
 /* Instruction operands end */
 
 /* Read/Write mask */
 	`always_comb_sys begin
 		if(mem_access) begin
-			`unique_sys case (sub_op[1:0])
+			`unique_sys case (sub_op_2bit)
 				2'b00: dsize = 4'b0001;
 				2'b01: dsize = 4'b0011;
 				2'b10: dsize = 4'b1111;
@@ -151,29 +157,6 @@ end
 /* verilator lint_on WIDTH */
 /* verilator lint_on UNUSEDSIGNAL */
 /* debug end */
-
-/* ALU decode start */
-	`always_comb_sys begin
-		// use add imm for 1100111 AKA JALR
-		`unique_sys if(instruction[5] && op != 7'b1100111 && !mem_access)
-			aluRB = rs1;
-		else if (pwrite && mem_access)
-			aluRB = imm_s;
-		else
-			aluRB = imm_i;
-		//fix me
-
-		// use extra ops for SRAI/SRA and non-imm(sub/add)
-		`unique_sys if (mem_access)
-			alu_op = 4'b0000;
-		else if (!mem_access && (sub_op == 5 || op == 7'b0110011))
-			alu_op = {instruction[30],sub_op};
-		else
-			alu_op = {1'b0,sub_op};
-
-	end
-	alu alu(alu_op,rs0,aluRB,alu_out,cmp_flag);
-/* ALU decode end */
 
 /* Decode instruction groups start */
 	`always_comb_sys begin
