@@ -11,6 +11,7 @@ module control_unit
 	input system_mem,
 	input [3:0]op_jmp,
 	input cmp_flag,
+	input immediate,
 
 	output load_paddr,
 	output load_pdata,
@@ -31,7 +32,9 @@ module control_unit
 	output store_alu,
 	output load_branch,
 	output load_jalr,
-	output pwrite);
+	output pwrite,
+	output alu_rs1,
+	output alu_imm_i);
 
 /* Microcode start */
 	reg [15:0] microop_prog[0:127];
@@ -106,6 +109,12 @@ end
 	assign load_branch =load_pc_microop && alu_flags && cmp_flag;
 
 	assign wa_mux = load_insr_microop || load_pc_microop;
+
+	// non-imm, branch
+	assign alu_rs1 = (!immediate && store_alu) || alu_flags;
+
+	// imm_i, load, jalr
+	assign alu_imm_i = (immediate && store_alu) || (!pwrite && mem_access) || load_jalr;
 	/* These happen in the same cycle as load_insr_microop */
 /*
 	wire lui_flag = (load_insr_microop)?microop_prog[op_jmp][9]:0;

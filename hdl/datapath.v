@@ -4,7 +4,7 @@ module datapath
 	input [31:0] instruction,
 	input [31:0] odata,
 	input [31:0] pc,
-	input [31:0] rd1,
+	input [31:0] rs1,
 	input [31:0] alu_out,
 
 	input wa_mux,
@@ -19,21 +19,29 @@ module datapath
 	input load_branch,
 	input load_jalr,
 	input load_pc,
+	input alu_rs1,
+	input alu_imm_i,
+	input pwrite,
+	input immediate,
 
 	output reg [31:0] APB_paddr_val,
 	output reg [31:0] APB_pdata_val,
 	output reg [31:0] load_pc_mux,
 	output reg [31:0] write_reg_mux,
+	output reg [31:0] aluRB,
+	output reg [3:0] alu_op,
 	output [4:0] wa);
 
 	wire [31:0] oldpc = pc - 4;
 
 /* Instruction operands start */
-	wire [31:0] imm_j = {{12{odata[31]}}, odata[19:12], odata[20], odata[30:21], 1'b0};
-	wire [31:0] imm_u = {odata[31:12], 12'b0};
 	assign wa = (wa_mux)? odata[11:7] : instruction[11:7];
 	wire [2:0] sub_op = instruction[14:12];
+	wire [31:0] imm_i = {{21{instruction[31]}}, instruction[30:20]};
+	wire [31:0] imm_s = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
 	wire [31:0] imm_b = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+	wire [31:0] imm_u = {odata[31:12], 12'b0};
+	wire [31:0] imm_j = {{12{odata[31]}}, odata[19:12], odata[20], odata[30:21], 1'b0};
 /* Instruction operands end */
 
 /* APB_paddr mux start */
@@ -52,7 +60,7 @@ module datapath
 /* APB_pdata mux start */
 	`always_comb_sys begin
 		`unique_sys if(mem_access)
-			APB_pdata_val = rd1;
+			APB_pdata_val = rs1;
 		else if(sys_load)
 			APB_pdata_val = pc;
 		else
@@ -100,5 +108,32 @@ module datapath
 			write_reg_mux = 32'bX;
 	end
 /* write_reg mux end */
+
+
+/* ALU decode start */
+	`always_comb_sys begin
+		// non-imm, branch
+		`unique_sys if(alu_rs1) begin
+			aluRB = rs1;
+		// store
+		end else if (pwrite)
+			aluRB = imm_s;
+		// imm_i, load, jalr
+		else if (alu_imm_i)
+			aluRB = imm_i;
+		else begin
+			aluRB = 32'bX;
+		end
+
+		`unique_sys if (mem_access)
+			alu_op = 4'b0000;
+		// imm_i and imm
+		else if ((sub_op == 5 && immediate) || (!immediate && store_alu))
+			alu_op = {instruction[30],sub_op};
+		else
+			alu_op = {1'b0,sub_op};
+
+	end
+/* ALU decode end */
 
 endmodule
