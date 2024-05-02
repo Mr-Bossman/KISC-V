@@ -70,7 +70,6 @@ end
 	wire lui_flag;
 	wire jal_flag;
 	wire sys_load_pc;
-	wire mem_access_rdy;
 	wire store_alu;
 	wire load_branch;
 	wire load_jalr;
@@ -87,7 +86,7 @@ end
 	load_paddr,load_pdata,load_pc,load_insr, write_reg, read_reg,
 
 	mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,
-	sys_load_pc,mem_access_rdy,store_alu,load_branch,
+	sys_load_pc,store_alu,load_branch,
 	load_jalr,pwrite,alu_rs1,alu_imm_i
 	);
 /* control_unit end */
@@ -101,8 +100,7 @@ end
 	datapath datapath(instruction,APB_prdata,pc,rs1,alu_out,
 
 	mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,sys_load_pc,
-	mem_access_rdy,store_alu,load_branch,load_jalr,load_pc,alu_rs1,alu_imm_i,
-	pwrite,immediate,
+	store_alu,load_branch,load_jalr,load_pc,alu_rs1,alu_imm_i, pwrite,immediate,
 
 	APB_paddr_val,APB_pdata_val,load_pc_mux,write_reg_mux,aluRB,alu_op);
 /* datapath end */
