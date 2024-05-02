@@ -20,8 +20,9 @@ module cpu
 
 	reg [31:0] pc;
 	assign opc = pc - 4;
- 	reg[3:0] op_jmp;
-	reg [31:0] instruction;
+	reg [3:0] op_jmp;
+	wire [31:0] instruction = (load_insr)?APB_prdata:saved_instruction;
+	reg [31:0] saved_instruction;
 	reg halt = 0;
 	assign halted = halt;
 
@@ -53,7 +54,7 @@ initial begin
 	pc = 0;
 	APB_paddr = 0;
 	halt = 0;
-	instruction = 0;
+	saved_instruction = 0;
 end
 
 /* APB start */
@@ -120,8 +121,8 @@ end
 /* datapath end */
 
 /* Instruction operands start */
-	assign ra0 = odata[19:15];
-	assign ra1 = odata[24:20];
+	assign ra0 = instruction[19:15];
+	assign ra1 = instruction[24:20];
 /* Instruction operands end */
 
 /* Read/Write mask */
@@ -160,7 +161,7 @@ end
 
 /* Decode instruction groups start */
 	`always_comb_sys begin
-		`unique_sys casez (odata[6:0])
+		`unique_sys casez (instruction[6:0])
 			7'b0100011: begin // STORE
 				op_jmp = 1;
 			end
@@ -198,7 +199,7 @@ end
 			pc <= 0;
 			APB_paddr <= 0;
 			halt <= 0;
-			instruction <= 0;
+			saved_instruction <= 0;
 		end else if(!halt) begin
 
 			if(load_paddr) begin
@@ -220,9 +221,9 @@ end
 			end
 
 			if (load_insr) begin
-				instruction <= odata;
-				if (odata === 32'bX)
-					$display("odata is undefined");
+				saved_instruction <= APB_prdata;
+				if (APB_prdata === 32'bX)
+					$display("instruction is undefined");
 			end
 
 			if (write_reg) begin
@@ -230,7 +231,7 @@ end
 					$display("write_reg_mux is undefined");
 			end
 
-			if(load_insr_rdy && odata == 32'b0)
+			if(load_insr_rdy && APB_prdata == 32'b0)
 				halt <= 1;
 
 		end
