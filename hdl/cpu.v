@@ -19,7 +19,6 @@ module cpu
 	output [31:0] opc);
 
 	reg [31:0] pc;
-	assign opc = pc - 4;
 	reg [3:0] op_jmp;
 	wire [31:0] instruction = (load_insr)?APB_prdata:saved_instruction;
 	reg [31:0] saved_instruction;
@@ -57,17 +56,7 @@ initial begin
 	saved_instruction = 0;
 end
 
-/* APB start */
-	reg [3:0] dsize;
-	/* APB spec dissalows read Byte mask */
-	assign APB_pstb = (APB_pwrite)?dsize:4'b1111;
-	reg [31:0] odata;
-/* APB end */
-
 /* control_unit start */
-	wire [6:0] op = instruction[6:0];
-	wire [1:0] sub_op_2bit = instruction[13:12];
-
 	wire system_mem = pc > 'h1000;
 	wire load_paddr;
 	wire load_pdata;
@@ -75,14 +64,12 @@ end
 	wire load_insr;
 	wire write_reg;
 	wire read_reg;
-	wire wa_mux;
 	wire mem_access;
 	wire microop_pc_zero;
 	wire sys_load;
 	wire lui_flag;
 	wire jal_flag;
 	wire sys_load_pc;
-	wire load_insr_rdy;
 	wire mem_access_rdy;
 	wire store_alu;
 	wire load_branch;
@@ -99,8 +86,8 @@ end
 
 	load_paddr,load_pdata,load_pc,load_insr, write_reg, read_reg,
 
-	wa_mux,mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,
-	sys_load_pc,load_insr_rdy,mem_access_rdy,store_alu,load_branch,
+	mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,
+	sys_load_pc,mem_access_rdy,store_alu,load_branch,
 	load_jalr,pwrite,alu_rs1,alu_imm_i
 	);
 /* control_unit end */
@@ -111,21 +98,29 @@ end
 	wire [31:0] load_pc_mux;
 	wire [31:0] write_reg_mux;
 
-	datapath datapath(instruction,odata,pc,rs1,alu_out,
+	datapath datapath(instruction,APB_prdata,pc,rs1,alu_out,
 
-	wa_mux,mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,sys_load_pc,
+	mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,sys_load_pc,
 	mem_access_rdy,store_alu,load_branch,load_jalr,load_pc,alu_rs1,alu_imm_i,
 	pwrite,immediate,
 
-	APB_paddr_val,APB_pdata_val,load_pc_mux,write_reg_mux,aluRB,alu_op,wa);
+	APB_paddr_val,APB_pdata_val,load_pc_mux,write_reg_mux,aluRB,alu_op);
 /* datapath end */
 
 /* Instruction operands start */
+	wire [6:0] op = instruction[6:0];
+	wire [1:0] sub_op_2bit = instruction[13:12];
+	assign wa = instruction[11:7];
 	assign ra0 = instruction[19:15];
 	assign ra1 = instruction[24:20];
 /* Instruction operands end */
 
 /* Read/Write mask */
+
+	reg [3:0] dsize;
+	/* APB spec dissalows read Byte mask */
+	assign APB_pstb = (APB_pwrite)?dsize:4'b1111;
+
 	`always_comb_sys begin
 		if(mem_access) begin
 			`unique_sys case (sub_op_2bit)
@@ -140,21 +135,12 @@ end
 	end
 /* Read/Write mask end */
 
-/* READ byte mask start */
-	integer i;
-	`always_comb_sys begin
-		for( i = 0; i <= (32/8)-1;i = i + 1) begin
-			if(dsize[i]) odata[8*i+:8] = APB_prdata[8*i+:8];
-			else odata[8*i+:8] = 8'b0;
-		end
-	end
-/* READ byte mask end */
-
 /* debug start */
 /* verilator lint_off UNUSEDSIGNAL */
 /* verilator lint_off WIDTH */
 	wire not_use = APB_perr;
 	assign odat = 'h0;
+	assign opc = pc - 4;
 /* verilator lint_on WIDTH */
 /* verilator lint_on UNUSEDSIGNAL */
 /* debug end */
@@ -231,7 +217,7 @@ end
 					$display("write_reg_mux is undefined");
 			end
 
-			if(load_insr_rdy && APB_prdata == 32'b0)
+			if(load_insr && APB_prdata == 32'b0)
 				halt <= 1;
 
 		end
