@@ -20,14 +20,12 @@ module control_unit
 	output reg write_reg,
 	output reg read_reg,
 
-	output wa_mux,
 	output mem_access,
 	output microop_pc_zero,
 	output sys_load,
 	output lui_flag,
 	output jal_flag,
 	output sys_load_pc,
-	output load_insr_rdy,
 	output mem_access_rdy,
 	output store_alu,
 	output load_branch,
@@ -92,7 +90,7 @@ end
 	assign microop_pc_zero = (microop_pc == 0);
 
 	wire sys_load_rdy = sys_load && APB_done;
-	assign load_insr_rdy = load_insr_microop && APB_Dready;
+	wire load_insr_rdy = load_insr_microop && APB_Dready;
 
 	assign mem_access_rdy = mem_access && APB_done && !APB_pwrite;
 
@@ -107,8 +105,6 @@ end
 
 	assign load_jalr = load_pc_microop && !alu_flags;
 	assign load_branch =load_pc_microop && alu_flags && cmp_flag;
-
-	assign wa_mux = load_insr_microop || load_pc_microop;
 
 	// non-imm, branch
 	assign alu_rs1 = (!immediate && store_alu) || alu_flags;
