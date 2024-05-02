@@ -34,6 +34,9 @@ module cpu
 /* ALU end */
 
 /* Regfile start*/
+	/* we can use the same bus for APB_pdata_val and write_reg_mux */
+	wire [31:0] write_reg_APB_pdata = (write_reg)?write_reg_mux:((load_pdata)?APB_pdata_val:32'bX);
+
 	wire [4:0]ra0;
 	wire [4:0]ra1;
 	wire [4:0]wa;
@@ -44,7 +47,7 @@ module cpu
 
 	write_reg,read_reg,
 
-	write_reg_mux,
+	write_reg_APB_pdata,
 	rs0,rs1
 	);
 /* Regfile end*/
@@ -193,7 +196,7 @@ end
 			end
 
 			if(load_pdata) begin
-				APB_pdata <= APB_pdata_val;
+				APB_pdata <= write_reg_APB_pdata;
 				if (APB_pdata_val === 32'bX)
 					$display("APB_pdata_val is undefined");
 			end
