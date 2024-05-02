@@ -13,7 +13,6 @@ module datapath
 	input lui_flag,
 	input jal_flag,
 	input sys_load_pc,
-	input mem_access_rdy,
 	input store_alu,
 	input load_branch,
 	input load_jalr,
@@ -88,7 +87,7 @@ module datapath
 			write_reg_mux = alu_out;
 		else if (load_pc || jal_flag)
 			write_reg_mux = pc;
-		else if (mem_access_rdy) begin
+		else if (mem_access) begin
 			case (sub_op)
 				3'b000: write_reg_mux = {{24{prdata[7]}},prdata[7:0]};	//LB
 				3'b001: write_reg_mux = {{16{prdata[15]}},prdata[15:0]};//LH
