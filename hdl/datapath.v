@@ -2,12 +2,11 @@
 module datapath
 	(
 	input [31:0] instruction,
-	input [31:0] odata,
+	input [31:0] prdata,
 	input [31:0] pc,
 	input [31:0] rs1,
 	input [31:0] alu_out,
 
-	input wa_mux,
 	input mem_access,
 	input microop_pc_zero,
 	input sys_load,
@@ -29,13 +28,11 @@ module datapath
 	output reg [31:0] load_pc_mux,
 	output reg [31:0] write_reg_mux,
 	output reg [31:0] aluRB,
-	output reg [3:0] alu_op,
-	output [4:0] wa);
+	output reg [3:0] alu_op);
 
 	wire [31:0] oldpc = pc - 4;
 
 /* Instruction operands start */
-	assign wa = (wa_mux)? instruction[11:7] : instruction[11:7];
 	wire [2:0] sub_op = instruction[14:12];
 	wire [31:0] imm_i = {{21{instruction[31]}}, instruction[30:20]};
 	wire [31:0] imm_s = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
@@ -92,17 +89,15 @@ module datapath
 		else if (load_pc || jal_flag)
 			write_reg_mux = pc;
 		else if (mem_access_rdy) begin
-			if(sub_op[2] == 1'b0) begin
-				case (sub_op[1:0])
-					2'b00: write_reg_mux = {{24{odata[7]}},odata[7:0]};
-					2'b01: write_reg_mux = {{16{odata[15]}},odata[15:0]};
-					2'b10: write_reg_mux = odata;
-					default: write_reg_mux = odata;
-				endcase
-			end else
-				write_reg_mux = odata;
-		end
-		else if (lui_flag)
+			case (sub_op)
+				3'b000: write_reg_mux = {{24{prdata[7]}},prdata[7:0]};	//LB
+				3'b001: write_reg_mux = {{16{prdata[15]}},prdata[15:0]};//LH
+				3'b010: write_reg_mux = prdata;				//LW
+				3'b100: write_reg_mux = {24'b0,prdata[7:0]};		//LBU
+				3'b101: write_reg_mux = {16'b0,prdata[15:0]};		//LHU
+				default: write_reg_mux = prdata;
+			endcase
+		end else if (lui_flag)
 			write_reg_mux = imm_u + ((instruction[5])? 0 : oldpc);
 		else
 			write_reg_mux = 32'bX;
