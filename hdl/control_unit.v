@@ -26,7 +26,6 @@ module control_unit
 	output lui_flag,
 	output jal_flag,
 	output sys_load_pc,
-	output mem_access_rdy,
 	output store_alu,
 	output load_branch,
 	output load_jalr,
@@ -92,7 +91,7 @@ end
 	wire sys_load_rdy = sys_load && APB_done;
 	wire load_insr_rdy = load_insr_microop && APB_Dready;
 
-	assign mem_access_rdy = mem_access && APB_done && !APB_pwrite;
+	wire mem_access_rdy = mem_access && APB_done && !APB_pwrite;
 
 	assign load_paddr = sys_load || mem_access || microop_pc_zero;
 	assign load_pdata = sys_load || mem_access;
@@ -124,7 +123,7 @@ end
 
 /* write_reg start */
 	`always_comb_sys begin
-		`unique_sys if(load_insr_rdy) begin
+		`unique_sys if(load_insr) begin
 			`unique_sys if(lui_flag || jal_flag) begin
 				read_reg = 0;
 				write_reg = 1;
