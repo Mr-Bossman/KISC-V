@@ -94,7 +94,7 @@ end
 	wire mem_access_rdy = mem_access && APB_done && !APB_pwrite;
 
 	assign load_paddr = sys_load || mem_access || microop_pc_zero;
-	assign load_pdata = sys_load || mem_access;
+	assign load_pdata = sys_load || (mem_access && pwrite);
 
 	assign load_insr = load_insr_rdy || (sys_load_rdy && !APB_pwrite);
 
