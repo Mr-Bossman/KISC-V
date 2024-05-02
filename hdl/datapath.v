@@ -35,13 +35,13 @@ module datapath
 	wire [31:0] oldpc = pc - 4;
 
 /* Instruction operands start */
-	assign wa = (wa_mux)? odata[11:7] : instruction[11:7];
+	assign wa = (wa_mux)? instruction[11:7] : instruction[11:7];
 	wire [2:0] sub_op = instruction[14:12];
 	wire [31:0] imm_i = {{21{instruction[31]}}, instruction[30:20]};
 	wire [31:0] imm_s = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
 	wire [31:0] imm_b = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
-	wire [31:0] imm_u = {odata[31:12], 12'b0};
-	wire [31:0] imm_j = {{12{odata[31]}}, odata[19:12], odata[20], odata[30:21], 1'b0};
+	wire [31:0] imm_u = {instruction[31:12], 12'b0};
+	wire [31:0] imm_j = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
 /* Instruction operands end */
 
 /* APB_paddr mux start */
@@ -103,7 +103,7 @@ module datapath
 				write_reg_mux = odata;
 		end
 		else if (lui_flag)
-			write_reg_mux = imm_u + ((odata[5])? 0 : oldpc);
+			write_reg_mux = imm_u + ((instruction[5])? 0 : oldpc);
 		else
 			write_reg_mux = 32'bX;
 	end
