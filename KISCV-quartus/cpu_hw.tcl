@@ -47,6 +47,7 @@ add_fileset_file sys.v VERILOG PATH ../hdl/sys.v
 add_fileset_file datapath.v VERILOG PATH ../hdl/datapath.v
 add_fileset_file regfile.v VERILOG PATH ../hdl/regfile.v
 add_fileset_file control_unit.v VERILOG PATH ../hdl/control_unit.v
+add_fileset_file programcounter.v VERILOG PATH ../hdl/programcounter.v
 add_fileset_file apb_align.v VERILOG PATH ../hdl/apb_align.v
 add_fileset_file APB.v VERILOG PATH ../hdl/APB.v
 add_fileset_file intctrl.v VERILOG PATH ../hdl/intctrl.v

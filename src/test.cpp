@@ -22,7 +22,7 @@ static void dump(){
 static void exit_now(int signo){
 	puts("\n\n");
 	for(int i = 0; i < 32;i++){
-		printf("regs %d: 0x%0x\n",i,sim->rootp->soc_top__DOT__riscv_cpu__DOT__regfile__DOT__regfile_mem[i]);
+		printf("regs %d: 0x%0x\n",i,sim->rootp->soc_top__DOT__riscv_cpu__DOT__rfile__DOT__regfile_mem[i]);
 	}
 	for(int i = 0; i < 32;i++){
 		printf("mem 0x%02x: 0x%08lx\n",i*4,sim->rootp->soc_top__DOT__ram__DOT__mem[i]);

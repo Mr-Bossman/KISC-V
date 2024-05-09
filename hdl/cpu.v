@@ -18,7 +18,7 @@ module cpu
 	output [31:0] odat,
 	output [31:0] opc);
 
-	reg [31:0] pc;
+	wire [31:0] pc;
 	reg [3:0] op_jmp;
 	wire [31:0] instruction = (load_insr)?APB_prdata:saved_instruction;
 	reg [31:0] saved_instruction;
@@ -30,7 +30,7 @@ module cpu
 	wire [31:0] aluRB;
 	wire [3:0] alu_op;
 	wire cmp_flag;
-	alu alu(alu_op,rs0,aluRB,alu_out,cmp_flag);
+	alu alunit(alu_op,rs0,aluRB,alu_out,cmp_flag);
 /* ALU end */
 
 /* Regfile start*/
@@ -42,7 +42,7 @@ module cpu
 	wire [4:0]wa;
 	wire [31:0]rs0;
 	wire [31:0]rs1;
-	regfile regfile(APB_PCLK,
+	regfile rfile(APB_PCLK,
 	wa,ra0,ra1,
 
 	write_reg,read_reg,
@@ -53,7 +53,6 @@ module cpu
 /* Regfile end*/
 
 initial begin
-	pc = 0;
 	APB_paddr = 0;
 	halt = 0;
 	saved_instruction = 0;
@@ -83,7 +82,7 @@ end
 	// alu immediate
 	wire immediate = op == 7'b0010011;
 
-	control_unit control_unit(APB_PCLK,APB_PRESETn,APB_psel,APB_penable,APB_pwrite,
+	control_unit cunit(APB_PCLK,APB_PRESETn,APB_psel,APB_penable,APB_pwrite,
 	APB_pready,APB_perr,interrupt,system_mem,op_jmp,cmp_flag,immediate,
 
 	load_paddr,load_pdata,load_pc,load_insr, write_reg, read_reg,
@@ -100,7 +99,7 @@ end
 	wire [31:0] load_pc_mux;
 	wire [31:0] write_reg_mux;
 
-	datapath datapath(instruction,APB_prdata,pc,rs1,alu_out,
+	datapath dpath(instruction,APB_prdata,pc,rs1,alu_out,
 
 	mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,sys_load_pc,
 	store_alu,load_branch,load_jalr,load_pc,alu_rs1,alu_imm_i, pwrite,immediate,
@@ -180,10 +179,15 @@ end
 	end
 /* Decode instruction groups end */
 
+/* Program counter start */
+	wire increment = load_pc && microop_pc_zero;
+	wire load_pcounter = load_pc && !microop_pc_zero;
+programcounter pcounter(APB_PCLK, APB_PRESETn, halt, increment, load_pcounter, load_pc_mux, pc);
+/* Program counter end */
+
 /* CPU start */
 	`always_ff_sys @(posedge APB_PCLK) begin
 		if(!APB_PRESETn) begin
-			pc <= 0;
 			APB_paddr <= 0;
 			halt <= 0;
 			saved_instruction <= 0;
@@ -201,8 +205,8 @@ end
 					$display("APB_pdata_val is undefined");
 			end
 
-			if (load_pc) begin
-				pc <= load_pc_mux;
+			if (load_pcounter) begin
+				//pc <= load_pc_mux;
 				if (load_pc_mux[1:0] != 2'b00)
 					$display("load_pc_mux is not aligned");
 				if (load_pc_mux === 32'bX)
