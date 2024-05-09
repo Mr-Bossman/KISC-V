@@ -68,8 +68,6 @@ module datapath
 	`always_comb_sys begin
 		`unique_sys if(jal_flag)
 			load_pc_mux = oldpc + imm_j;
-		else if(microop_pc_zero)
-			load_pc_mux = pc + 4;
 		else if (sys_load_pc)
 			load_pc_mux = instruction;
 		else if (load_jalr)
