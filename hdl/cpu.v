@@ -203,6 +203,8 @@ end
 
 			if (load_pc) begin
 				pc <= load_pc_mux;
+				if (load_pc_mux[1:0] != 2'b00)
+					$display("load_pc_mux is not aligned");
 				if (load_pc_mux === 32'bX)
 					$display("load_pc_mux is undefined");
 			end
