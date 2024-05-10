@@ -8,7 +8,6 @@ module datapath
 	input [31:0] alu_out,
 
 	input mem_access,
-	input microop_pc_zero,
 	input sys_load,
 	input lui_flag,
 	input jal_flag,
@@ -29,8 +28,6 @@ module datapath
 	output reg [31:0] aluRB,
 	output reg [3:0] alu_op);
 
-	wire [31:0] oldpc = pc - 4;
-
 /* Instruction operands start */
 	wire [2:0] sub_op = instruction[14:12];
 	wire [31:0] imm_i = {{21{instruction[31]}}, instruction[30:20]};
@@ -42,14 +39,12 @@ module datapath
 
 /* APB_paddr mux start */
 	`always_comb_sys begin
-		`unique_sys if(microop_pc_zero)
-			APB_paddr_val = pc;
-		else if(mem_access)
+		`unique_sys if(mem_access)
 			APB_paddr_val = alu_out;
 		else if(sys_load)
 			APB_paddr_val = 4;
 		else
-			APB_paddr_val = 32'bX;
+			APB_paddr_val = pc;
 	end
 /* APB_paddr mux end */
 
@@ -58,7 +53,7 @@ module datapath
 		`unique_sys if(mem_access)
 			APB_pdata_val = rs1;
 		else if(sys_load)
-			APB_pdata_val = pc;
+			APB_pdata_val = pc + 4;
 		else
 			APB_pdata_val = 32'bX;
 	end
@@ -67,13 +62,13 @@ module datapath
 /* load_pc mux start */
 	`always_comb_sys begin
 		`unique_sys if(jal_flag)
-			load_pc_mux = oldpc + imm_j;
+			load_pc_mux = pc + imm_j;
 		else if (sys_load_pc)
 			load_pc_mux = instruction;
 		else if (load_jalr)
 			load_pc_mux = alu_out;
 		else if (load_branch)
-			load_pc_mux = oldpc + imm_b;
+			load_pc_mux = pc + imm_b;
 		else
 			load_pc_mux = 32'bX;
 	end
@@ -84,7 +79,7 @@ module datapath
 		`unique_sys if (alu_flag)
 			write_reg_mux = alu_out;
 		else if (load_pc || jal_flag)
-			write_reg_mux = pc;
+			write_reg_mux = pc + 4;
 		else if (mem_access) begin
 			case (sub_op)
 				3'b000: write_reg_mux = {{24{prdata[7]}},prdata[7:0]};	//LB
@@ -95,7 +90,7 @@ module datapath
 				default: write_reg_mux = prdata;
 			endcase
 		end else if (lui_flag)
-			write_reg_mux = imm_u + ((instruction[5])? 0 : oldpc);
+			write_reg_mux = imm_u + ((instruction[5])? 0 : pc);
 		else
 			write_reg_mux = 32'bX;
 	end

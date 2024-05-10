@@ -10,56 +10,51 @@ class Micro_ops(enum.IntEnum):
 	MEM_ACCESS	= 0x0008,
 	ALU_FLAG	= 0x0010,
 	LOAD_PC		= 0x0020,
-	SYS_LOAD	= 0x0040
-
+	SYS_LOAD	= 0x0040,
+	PC_INC		= 0x0080,
 
 LOADINS = [Micro_ops.APB_PSEL,
 	   Micro_ops.APB_PSEL | Micro_ops.LOAD_ISR,
 	   Micro_ops.NOP]
 
-STORE = [Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
+#APB_WRITE should be high here
+STORE = [Micro_ops.NOP,
 	 Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
-	 Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
+         Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE | Micro_ops.PC_INC,
 	 Micro_ops.NOP]
 
-LOAD = [Micro_ops.MEM_ACCESS,
+LOAD = [Micro_ops.NOP,
 	Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS,
-	Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS,
+	Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.PC_INC,
 	Micro_ops.NOP]
 
-SYSTEM = [Micro_ops.SYS_LOAD,
+SYSTEM = [Micro_ops.NOP,
 	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD,
 	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD,
 	  Micro_ops.NOP,
 	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE,
-	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE,
+	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE | Micro_ops.PC_INC,
 	  Micro_ops.NOP]
 
 LOADINS_NO_EN = [Micro_ops.APB_PSEL | Micro_ops.LOAD_ISR,
 		 Micro_ops.NOP]
 
-STORE_NO_EN = [Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
-	       Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
+STORE_NO_EN = [Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE | Micro_ops.PC_INC,
 	       Micro_ops.NOP]
 
-LOAD_NO_EN = [Micro_ops.MEM_ACCESS,
-	      Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS,
+LOAD_NO_EN = [Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.PC_INC,
 	      Micro_ops.NOP]
 
-SYSTEM_NO_EN = [Micro_ops.SYS_LOAD,
-		Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD,
+SYSTEM_NO_EN = [Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD,
 		Micro_ops.NOP,
-		Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE,
+		Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE | Micro_ops.PC_INC,
 		Micro_ops.NOP]
 
-ALU = [Micro_ops.ALU_FLAG,
-       Micro_ops.NOP]
+ALU = [Micro_ops.ALU_FLAG | Micro_ops.PC_INC]
 
-JALR = [Micro_ops.LOAD_PC,
-	Micro_ops.NOP]
+JALR = [Micro_ops.LOAD_PC]
 
-BRANCH = [Micro_ops.ALU_FLAG | Micro_ops.LOAD_PC,
-	  Micro_ops.NOP]
+BRANCH = [Micro_ops.ALU_FLAG | Micro_ops.LOAD_PC | Micro_ops.PC_INC]
 
 def print_err(*args, **kwargs):
 	print(*args, file=sys.stderr, **kwargs)
@@ -149,6 +144,7 @@ def main():
 			gen_microcode(sys.argv[1])
 	elif len(sys.argv) == 1:
 		gen_microcode()
+		gen_microcode_no_en()
 	else:
 		help()
 

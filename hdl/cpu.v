@@ -1,10 +1,12 @@
 `include "sys.v"
+/* verilator lint_off UNOPTFLAT */
+// It's not though LOL
 module cpu
 	#(parameter ADDR_WIDTH = 32,
 	  parameter DATA_WIDTH = 32)
 	(input APB_PCLK,
 	input APB_PRESETn,
-	output reg [ADDR_WIDTH-1:0] APB_paddr,
+	output [ADDR_WIDTH-1:0] APB_paddr,
 	output [DATA_WIDTH-1:0] APB_pdata,
 	input [DATA_WIDTH-1:0] APB_prdata,
 	output APB_psel,
@@ -54,21 +56,19 @@ module cpu
 /* Regfile end*/
 
 initial begin
-	APB_paddr = 0;
 	halt = 0;
 	saved_instruction = 0;
 end
 
 /* control_unit start */
 	wire system_mem = pc > 'h1000;
-	wire load_paddr;
 	wire load_pdata;
 	wire load_pc;
 	wire load_insr;
 	wire write_reg;
 	wire read_reg;
 	wire mem_access;
-	wire microop_pc_zero;
+	wire increment;
 	wire sys_load;
 	wire lui_flag;
 	wire jal_flag;
@@ -86,26 +86,25 @@ end
 	control_unit cunit(APB_PCLK,APB_PRESETn,APB_psel,APB_penable,APB_pwrite,
 	APB_pready,APB_perr,interrupt,system_mem,op_jmp,cmp_flag,immediate,
 
-	load_paddr,load_pdata,load_pc,load_insr, write_reg, read_reg,
+	load_pdata,load_pc,load_insr, write_reg, read_reg,
 
-	mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,
+	mem_access,increment,sys_load,lui_flag,jal_flag,
 	sys_load_pc,alu_flag,load_branch,
 	load_jalr,pwrite,alu_rs1,alu_imm_i
 	);
 /* control_unit end */
 
 /* datapath start */
-	wire [31:0] APB_paddr_val;
 	wire [31:0] APB_pdata_val;
 	wire [31:0] load_pc_mux;
 	wire [31:0] write_reg_mux;
 
 	datapath dpath(instruction,APB_prdata,pc,rs1,alu_out,
 
-	mem_access,microop_pc_zero,sys_load,lui_flag,jal_flag,sys_load_pc,
+	mem_access,sys_load,lui_flag,jal_flag,sys_load_pc,
 	alu_flag,load_branch,load_jalr,load_pc,alu_rs1,alu_imm_i, pwrite,immediate,
 
-	APB_paddr_val,APB_pdata_val,load_pc_mux,write_reg_mux,aluRB,alu_op);
+	APB_paddr,APB_pdata_val,load_pc_mux,write_reg_mux,aluRB,alu_op);
 /* datapath end */
 
 /* Instruction operands start */
@@ -181,24 +180,17 @@ end
 /* Decode instruction groups end */
 
 /* Program counter start */
-	wire increment = load_pc && microop_pc_zero;
-	wire load_pcounter = load_pc && !microop_pc_zero;
-programcounter pcounter(APB_PCLK, APB_PRESETn, halt, increment, load_pcounter, load_pc_mux, pc);
+	wire load_pcounter = load_pc && !increment;
+	programcounter pcounter(APB_PCLK, APB_PRESETn,
+		halt, increment, load_pcounter, load_pc_mux, pc);
 /* Program counter end */
 
 /* CPU start */
 	`always_ff_sys @(posedge APB_PCLK) begin
 		if(!APB_PRESETn) begin
-			APB_paddr <= 0;
 			halt <= 0;
 			saved_instruction <= 0;
 		end else if(!halt) begin
-
-			if(load_paddr) begin
-				APB_paddr <= APB_paddr_val;
-				if (APB_paddr_val === 32'bX)
-					$display("APB_paddr_val is undefined");
-			end
 
 			if(load_pdata) begin
 				//APB_pdata <= write_reg_APB_pdata;
@@ -207,7 +199,6 @@ programcounter pcounter(APB_PCLK, APB_PRESETn, halt, increment, load_pcounter, l
 			end
 
 			if (load_pcounter) begin
-				//pc <= load_pc_mux;
 				if (load_pc_mux[1:0] != 2'b00)
 					$display("load_pc_mux is not aligned");
 				if (load_pc_mux === 32'bX)

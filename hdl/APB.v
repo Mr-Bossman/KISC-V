@@ -60,9 +60,12 @@ module APB
 	assign perr = sram_perr | uart_perr | `SYSTEM_PERR | access_fault;
 
 `ifdef DO_DISPLAY
+`ifndef SYSTEM_VERILOG_2012_ICARUS
+	// icarus prints this because of the order it computes the expressions
 	always @(posedge access_fault) begin
 		$display("Access fault: %h", paddr);
 	end
+`endif
 `endif
 
 	`always_comb_sys begin
