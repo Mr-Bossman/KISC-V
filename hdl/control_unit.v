@@ -13,7 +13,6 @@ module control_unit
 	input cmp_flag,
 	input immediate,
 
-	output load_paddr,
 	output load_pdata,
 	output load_pc,
 	output load_insr,
@@ -21,7 +20,7 @@ module control_unit
 	output reg read_reg,
 
 	output mem_access,
-	output microop_pc_zero,
+	output increment,
 	output sys_load,
 	output lui_flag,
 	output jal_flag,
@@ -87,21 +86,22 @@ end
 	wire load_pc_microop = microop[5];
 	assign sys_load = microop[6];
 	assign store_alu = microop[7];
-	assign microop_pc_zero = (microop_pc == 0);
+	wire microop_pc_zero = microop_pc == 0;
+	wire microop_pc_ones = microop_pc == 'h7f;
+	assign increment = (microop_pc_ones || lui_flag) && !load_pc && APB_Dready;
 
 	wire sys_load_rdy = sys_load && APB_done;
 	wire load_insr_rdy = load_insr_microop && APB_Dready;
 
 	wire mem_access_rdy = mem_access && APB_done && !APB_pwrite;
 
-	assign load_paddr = sys_load || mem_access || microop_pc_zero;
 	assign load_pdata = sys_load || (mem_access && pwrite);
 
 	assign load_insr = load_insr_rdy || (sys_load_rdy && !APB_pwrite);
 
 	assign sys_load_pc = sys_load_rdy && pwrite;
 	wire load_pc_microop_true = load_pc_microop && (alu_flags && cmp_flag || !alu_flags);
-	assign load_pc = (jal_flag && load_insr_microop && APB_Dready) || (microop_pc_zero || load_pc_microop_true || sys_load_pc);
+	assign load_pc = (jal_flag && load_insr_microop && APB_Dready) || (load_pc_microop_true || sys_load_pc);
 
 	assign load_jalr = load_pc_microop && !alu_flags;
 	assign load_branch =load_pc_microop && alu_flags && cmp_flag;
@@ -175,7 +175,7 @@ end
 /* microcode start */
 	`always_ff_sys @(posedge APB_PCLK) begin
 		if(APB_PRESETn == 0) begin
-			microop <= 0;
+			microop <= microop_prog[0];
 		end else begin
 			// halt till APB_Dready is ready
 			if(APB_Dready)

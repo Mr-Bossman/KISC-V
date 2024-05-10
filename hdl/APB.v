@@ -49,9 +49,14 @@ module APB
 	reg access_fault;
 	assign perr = sram_perr | uart_perr | system_perr | access_fault;
 
+`ifdef SYSTEM_VERILOG_2012_ICARUS
+// no ifndef ;( i want my elifndef's
+`else
+	// icarus prints this because of the order it computes the expressions
 	always @(posedge access_fault) begin
 		$display("Access fault: %h", paddr);
 	end
+`endif
 
 	`always_comb_sys begin
 		// `unique_sys verilator complains about this
