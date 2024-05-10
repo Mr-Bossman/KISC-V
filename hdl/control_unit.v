@@ -162,7 +162,11 @@ end
 			microop_addr = {op_jmp[2:0], microop_pc[3:0]};
 		/* Don't interrupt if we are in the interrupt handler */
 		else if(microop_pc_zero && interrupt && system_mem)
+`ifdef HAS_APB_PENABLE
 			microop_addr = 3*16 + 2; // System
+`else
+			microop_addr = 3*16 + 1; // System
+`endif
 		else
 			microop_addr = microop_pc;
 	end
