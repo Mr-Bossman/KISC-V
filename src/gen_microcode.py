@@ -18,49 +18,35 @@ LOADINS = [Micro_ops.APB_PSEL,
 	   Micro_ops.APB_PSEL | Micro_ops.LOAD_ISR,
 	   Micro_ops.NOP]
 
-STORE = [Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
-	 Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
-	 Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
-	 Micro_ops.NOP]
+#APB_WRITE should be high here
+STORE = [Micro_ops.APB_PSEL,
+         Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE]
 
-LOAD = [Micro_ops.MEM_ACCESS,
-	Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS,
-	Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS,
-	Micro_ops.NOP]
+LOAD = [Micro_ops.APB_PSEL,
+	Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS]
 
-SYSTEM = [Micro_ops.SYS_LOAD,
-	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD,
+SYSTEM = [Micro_ops.APB_PSEL,
 	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD,
 	  Micro_ops.NOP,
-	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE,
-	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE,
-	  Micro_ops.NOP]
+	  Micro_ops.APB_PSEL,
+	  Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE]
 
 LOADINS_NO_EN = [Micro_ops.APB_PSEL | Micro_ops.LOAD_ISR,
 		 Micro_ops.NOP]
 
-STORE_NO_EN = [Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
-	       Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE,
-	       Micro_ops.NOP]
+STORE_NO_EN = [Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS | Micro_ops.APB_WRITE]
 
-LOAD_NO_EN = [Micro_ops.MEM_ACCESS,
-	      Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS,
-	      Micro_ops.NOP]
+LOAD_NO_EN = [Micro_ops.APB_PSEL | Micro_ops.MEM_ACCESS]
 
-SYSTEM_NO_EN = [Micro_ops.SYS_LOAD,
-		Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD,
+SYSTEM_NO_EN = [Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD,
 		Micro_ops.NOP,
-		Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE,
-		Micro_ops.NOP]
+		Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE]
 
-ALU = [Micro_ops.ALU_STORE,
-       Micro_ops.NOP]
+ALU = [Micro_ops.ALU_STORE]
 
-JALR = [Micro_ops.LOAD_PC,
-	Micro_ops.NOP]
+JALR = [Micro_ops.LOAD_PC]
 
-BRANCH = [Micro_ops.ALU_FLAGS | Micro_ops.LOAD_PC,
-	  Micro_ops.NOP]
+BRANCH = [Micro_ops.ALU_FLAGS | Micro_ops.LOAD_PC]
 
 def print_err(*args, **kwargs):
 	print(*args, file=sys.stderr, **kwargs)
@@ -78,6 +64,7 @@ def gen_opcodes(index, microcode,loadins):
 	if(len(microcode) > 16-len(loadins)):
 		print_err("Too many microcode instructions")
 		return
+	#ofs = 0 if index == 0 else len(loadins)-1
 	ofs = 1 if index == 0 else len(loadins)
 	for i in range(16):
 		if(i >= len(microcode)):
@@ -88,7 +75,8 @@ def gen_opcodes(index, microcode,loadins):
 			code = microcode[i] | (((i+ofs)*0x200) + (index*0x2000))
 			# end jump to start
 			if(i == len(microcode)-1):
-				code = microcode[i]
+				jmp_to_nop = 0 if index == 0 else 0xff00
+				code = microcode[i] | jmp_to_nop
 		ret += "{:04x}\n".format(code)
 	if index == 0:
 		for _ in range(len(loadins)-1):
@@ -152,6 +140,7 @@ def main():
 			gen_microcode(sys.argv[1])
 	elif len(sys.argv) == 1:
 		gen_microcode()
+		gen_microcode_no_en()
 	else:
 		help()
 
