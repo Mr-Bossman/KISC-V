@@ -29,12 +29,6 @@ module APB
 		input uart_ready,
 		input uart_perr,
 
-		output reg system_sel,
-		output reg system_enable,
-		input [DATA_WIDTH-1:0]system_data,
-		input system_ready,
-		input system_perr,
-
 		output reg intc_sel,
 		output reg intc_enable,
 		input [DATA_WIDTH-1:0]intc_data,
@@ -47,25 +41,14 @@ module APB
 		input timer_ready,
 		input timer_perr);
 	reg access_fault;
-	assign perr = sram_perr | uart_perr | system_perr | access_fault;
-
-`ifdef SYSTEM_VERILOG_2012_ICARUS
-// no ifndef ;( i want my elifndef's
-`else
-	// icarus prints this because of the order it computes the expressions
-	always @(posedge access_fault) begin
-		$display("Access fault: %h", paddr);
-	end
-`endif
+	assign perr = sram_perr | uart_perr | access_fault;
 
 	`always_comb_sys begin
 		// `unique_sys verilator complains about this
-		if(paddr >= 'h80000000) begin // SRAM
+		if(paddr >= 'h80000000 || paddr <= 'hffff) begin // SRAM
 			access_fault = 0;
 			uart_sel = 0;
 			uart_enable = 0;
-			system_sel = 0;
-			system_enable = 0;
 			intc_sel = 0;
 			intc_enable = 0;
 			timer_sel = 0;
@@ -78,8 +61,6 @@ module APB
 			access_fault = 0;
 			sram_sel = 0;
 			sram_enable = 0;
-			system_sel = 0;
-			system_enable = 0;
 			intc_sel = 0;
 			intc_enable = 0;
 			timer_sel = 0;
@@ -92,8 +73,6 @@ module APB
 			access_fault = 0;
 			sram_sel = 0;
 			sram_enable = 0;
-			system_sel = 0;
-			system_enable = 0;
 			uart_sel = 0;
 			uart_enable = 0;
 			intc_sel = 0;
@@ -102,28 +81,12 @@ module APB
 			timer_enable = penable;
 			pready = timer_ready;
 			prdata = timer_data;
-		end else if (paddr <= 'hffff)begin // System ROM
-			access_fault = 0;
-			uart_sel = 0;
-			uart_enable = 0;
-			sram_sel = 0;
-			sram_enable = 0;
-			intc_sel = 0;
-			intc_enable = 0;
-			timer_sel = 0;
-			timer_enable = 0;
-			system_sel = psel;
-			system_enable = penable;
-			pready = system_ready;
-			prdata = system_data;
 		end else if (paddr == 'h20000000 || paddr == 'h20000004) begin // INTC
 			access_fault = 0;
 			uart_sel = 0;
 			uart_enable = 0;
 			sram_sel = 0;
 			sram_enable = 0;
-			system_sel = 0;
-			system_enable = 0;
 			timer_sel = 0;
 			timer_enable = 0;
 			intc_sel = psel;
@@ -132,8 +95,6 @@ module APB
 			prdata = intc_data;
 		end else begin // Access fault
 			access_fault = 1;
-			system_sel = 0;
-			system_enable = 0;
 			uart_sel = 0;
 			uart_enable = 0;
 			sram_sel = 0;
