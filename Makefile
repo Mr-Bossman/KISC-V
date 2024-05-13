@@ -40,12 +40,11 @@ tests:
 run_tests: all tests
 	./$(PREFIX_NAME)
 
-example: src/example.s src/example.lds all
+example: src/example.s src/example.lds
 	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/example.s -o $(BUILD_DIR)/example.o
-	$(TARGET_LD) --gc-sections -T src/example.lds $(BUILD_DIR)/example.o -o $(BUILD_DIR)/example.elf
+	$(TARGET_CC) -march=rv32izicsr -O2 -mabi=ilp32 -Wall -Wno-array-bounds -Wno-unused-function -c src/example.c -o $(BUILD_DIR)/example_c.o
+	$(TARGET_LD) --gc-sections -T src/example.lds $(BUILD_DIR)/example.o $(BUILD_DIR)/example_c.o $(LDFLAGS) -o $(BUILD_DIR)/example.elf
 	$(CROSS_COMPILE)objcopy -Obinary $(BUILD_DIR)/example.elf $(BUILD_DIR)/example.bin
-	$(CROSS_COMPILE)objcopy -O verilog --gap-fill 0 --verilog-data-width=4 $(BUILD_DIR)/example.elf system.mem
-	sed -i s/@.*//g system.mem
 
 system: src/system.S src/system.c src/system.lds
 	$(TARGET_CC) -march=rv32izicsr -mabi=ilp32 -c src/system.S -o $(BUILD_DIR)/system_start.o
