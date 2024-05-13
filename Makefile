@@ -9,7 +9,7 @@ CPPFLAGS = -DVPREFIX=$(PREFIX_NAME) -O3
 VFLAGS =
 TARGET_CFLAGS = -march=rv32izicsr -mabi=ilp32 -O2 -Wall -Wextra -Wno-array-bounds -Wno-unused-function -Wno-unused-parameter
 TARGET_LDFLAGS = --gc-sections
-TARGET_C_SOURCES = src/system.c src/simple_lib.c
+TARGET_C_SOURCES = src/simple_lib.c src/system.c src/example.c
 TARGET_S_SOURCES = src/example_start.S src/system_start.S
 TARGET_C_INCLUDES = src/simple_lib.h
 CPP_SOURCES = src/test.cpp
@@ -36,7 +36,7 @@ vpath %.bin $(BUILD_DIR)
 CROSS_COMPILE := riscv32-unknown-elf-
 PATH := $(PATH):$(shell pwd)/riscv/bin
 
-.PHONY: clean all run run_tests tests icarus verilator system example linux quartus clean_exe clean_mem microcode
+.PHONY: clean all run run_tests tests icarus verilator system example linux quartus clean_exe clean_mem microcode example_system
 
 all: $(TARGET_OBJECTS) $(PREFIX_NAME) system tests microcode
 
@@ -66,7 +66,7 @@ $(BUILD_DIR)/%.o: %.c
 $(BUILD_DIR)/%.o: %.S
 	$(TARGET_CC) -MMD -c $(TARGET_CFLAGS) $< -o $@
 
-$(BUILD_DIR)/example.bin: example.lds example_start.o
+$(BUILD_DIR)/example.bin: example.lds example_start.o example.o simple_lib.o
 	$(TARGET_LD) $(TARGET_LDFLAGS) -T $^ -Ttext $(TEXT_START) -o $(basename $@).elf
 	$(CROSS_COMPILE)objcopy -Obinary $(basename $@).elf $@
 	@echo truncate -s $$(($$(set -- $$(ls -l $@);echo "(($$5+3)/4)*4"))) $@
