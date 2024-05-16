@@ -7,7 +7,12 @@
 	model = "riscv-minimal-nommu,qemu";
 
 	chosen {
-		bootargs = "earlycon=uart8250,mmio,0x10000000,1000000 console=ttyS0";
+		bootargs = "earlycon=uart8250,mmio,0x10000000 console=ttyS0";
+		/*
+		opencores 16550 uart seems to break if linux inits it.
+		removing the baudrate setting tells the driver to not init it.
+		bootargs = "earlycon=uart8250,mmio,0x10000000,460800 console=ttyS0";
+		*/
 	};
 
 	memory@80000000 {
@@ -46,7 +51,7 @@
 		ranges;
 
 		uart@10000000 {
-			clock-frequency = <0x1000000>;
+			clock-frequency = <14746227>;
 			reg = <0x00 0x10000000 0x00 0x100>;
 			compatible = "ns16850";
 		};
