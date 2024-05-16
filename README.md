@@ -18,6 +18,8 @@ make CROSS_COMPILE=riscv32-unknown-elf- testkern
 ```
 ## TODOS
  - Get running of actual FPGA
+ - remove opencores/library/.zip
+ - removeKISCV-quartus/.qsys_edit/preferences.xml
 
 ## Notes
 ### Tested on
