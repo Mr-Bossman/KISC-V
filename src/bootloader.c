@@ -17,10 +17,11 @@ static void sendback(size_t i);
 static void bootprompt(void);
 
 void boot(void) {
-	printS("Enter Size in 32bit hex or press s to boot\n\r");
+	//printS("Enter Size in 32bit hex or press s to boot\n\r");
 	static char s[9];
 	uint32_t size;
 	uint32_t i = 0;
+	return;
 	while(1) {
 		if(hasChar()) {
 			s[i++] = getChar();

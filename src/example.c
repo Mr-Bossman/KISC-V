@@ -28,8 +28,33 @@ static void test_rand_memset(volatile void *ptr, size_t num);
 
 void entry(void) {
 	prompt("Test ram?..\r");
+/*
+	printS("\r\n");
 
-	test_ram(0x100000);
+	printH_c(UART_BASE[1]);
+	printS("\r\n");
+	UART_BASE[2] = 0;
+	UART_BASE[4] = 0x3;
+	printH_c(UART_BASE[3]);
+	printS("\r\n");
+*/
+	for (int i = 0; i < 100000; i++) {
+		uint8_t c = ((volatile uint8_t*)RAM_BASE)[i];
+		if ( i % 16 == 0){
+			printS("\n\r");
+			printH((size_t)(RAM_BASE + i));
+		}
+			printS(" ");
+			printH_c(c);
+		if (c >= 0x20 && c < 0x7e) {
+			//printS("  ");
+			//printC(c);
+		} else {
+		//	printS(" ");
+		//	printH_c(c);
+		}
+
+	}
 
 	printS("Done!\r\n");
 	_reset_();

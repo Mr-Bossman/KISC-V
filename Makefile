@@ -8,7 +8,7 @@ CPPFLAGS = -DVPREFIX=$(PREFIX_NAME) -O3
 VFLAGS =
 LDFLAGS =
 CPP_SOURCES = src/test.cpp
-V_SOURCES = hdl/sram.v hdl/apb_align.v hdl/cpu.v hdl/alu.v hdl/APB.v hdl/uart.v hdl/intctrl.v hdl/timer.v hdl/control_unit.v hdl/datapath.v hdl/regfile.v hdl/programcounter.v hdl/sys.v
+V_SOURCES = hdl/sram.v hdl/apb_align.v hdl/cpu.v hdl/alu.v hdl/APB.v hdl/uart.v hdl/intctrl.v hdl/timer.v hdl/control_unit.v hdl/datapath.v hdl/regfile.v hdl/programcounter.v hdl/sys.v opencores/gh_uart_16550_AMBA_APB_wrapper.v
 VERILATOR_TOP_FILE = hdl/soc_top.v
 VERILATOR_TOP = soc_top
 ICARUS_TOP_FILE = hdl/soc_top_iverilog.v

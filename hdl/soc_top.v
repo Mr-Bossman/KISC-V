@@ -1,3 +1,4 @@
+/* verilator lint_off UNUSEDSIGNAL */
 module soc_top
 	#(parameter ADDR_WIDTH = 32,
 	  parameter DATA_WIDTH = 32)
@@ -92,6 +93,25 @@ end
 			system_data, system_sel, system_enable, APB_pwrite, APB_pstb, system_ready,
 			system_perr);
 
-	uart	console(clk, APB_PRESETn, APB_paddr, APB_pdata, uart_data, uart_sel, uart_enable,
-			APB_pwrite, APB_pstb, uart_ready, uart_perr, char_in, read);
+	wire [DATA_WIDTH-1:0]not_use_1;
+	wire not_use_2;
+	wire not_use_3;
+	wire not_use_3;
+	wire not_use_4;
+
+	always @(posedge clk) begin
+		if (uart_sel && uart_enable && uart_ready) begin
+			if(APB_pwrite) begin
+				$display("pc %h wrote %h at %h", oldpc, APB_pdata[7:0], APB_paddr[2:0]);
+			end
+			else begin
+				$display("pc %h read  %h at %h", oldpc, uart_data[7:0], APB_paddr[2:0]);
+			end
+		end
+	end
+	uart	uart_wraper(clk, APB_PRESETn, APB_paddr, APB_pdata, not_use_1, uart_sel, uart_enable, APB_pwrite, APB_pstb, not_use_2, not_use_3, char_in, read);
+
+
+	uart_wraper	console(clk, APB_PRESETn, APB_paddr, APB_pdata, uart_data, uart_sel, uart_enable,
+			APB_pwrite, APB_pstb, uart_ready, uart_perr, clk, 1, not_use_4);
 endmodule

@@ -1,3 +1,4 @@
+/* verilator lint_off UNUSEDSIGNAL */
 module uart_wraper(
 		input APB_PCLK,
 		input APB_PRESETn,
@@ -35,9 +36,30 @@ wire IRQ;
 wire [7:0]PRDATA;
 assign prdata = {24'b0,PRDATA};
 
-gh_uart_16550_AMBA_APB_wrapper uart16550(APB_PCLK, APB_PRESETn, psel, penable, pwrite,paddr[2:0],
-	pdata[7:0], PRDATA, BR_clk, sRX, CTSn, DSRn, RIn, DCDn, sTX, DTRn, RTSn, OUT1n, OUT2n,
-	TXRDYn, RXRDYn, IRQ, B_CLK);
+gh_uart_16550_AMBA_APB_wrapper uart16550(
+	.PCLK(APB_PCLK),
+	.PRESETn(APB_PRESETn),
+	.PSEL(psel),
+	.PENABLE(penable),
+	.PWRITE(pwrite),
+	.PADDR(paddr[2:0]),
+	.PWDATA(pdata[7:0]),
+	.PRDATA(PRDATA),
+	.BR_clk(BR_clk),
+	.sRX(sRX),
+	.CTSn(CTSn),
+	.DSRn(DSRn),
+	.RIn(RIn),
+	.DCDn(DCDn),
+	.sTX(sTX),
+	.DTRn(DTRn),
+	.RTSn(RTSn),
+	.OUT1n(OUT1n),
+	.OUT2n(OUT2n),
+	.TXRDYn(TXRDYn),
+	.RXRDYn(RXRDYn),
+	.IRQ(IRQ),
+	.B_CLK(B_CLK));
 
 /*
 -------- AMBA_APB signals ------------
