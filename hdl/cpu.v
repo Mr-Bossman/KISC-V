@@ -6,8 +6,8 @@ module cpu
 	  parameter DATA_WIDTH = 32)
 	(input APB_PCLK,
 	input APB_PRESETn,
-	output reg [ADDR_WIDTH-1:0] APB_paddr,
-	output reg [DATA_WIDTH-1:0] APB_pdata,
+	output [ADDR_WIDTH-1:0] APB_paddr,
+	output [DATA_WIDTH-1:0] APB_pdata,
 	input [DATA_WIDTH-1:0] APB_prdata,
 	output APB_psel,
 	output APB_penable,
@@ -20,7 +20,7 @@ module cpu
 	output [31:0] odat,
 	output [31:0] opc);
 
-	reg [31:0] pc;
+	wire [31:0] pc;
 	reg [3:0] op_jmp;
 	wire [31:0] instruction = (load_insr)?APB_prdata:saved_instruction;
 	reg [31:0] saved_instruction;
