@@ -66,6 +66,7 @@ testkern: all
 quartus: system
 	unzip -n opencores/opencores.zip -d opencores/
 	cp microop.hex KISCV-quartus/microop.hex
+	cp microop_no_en.hex KISCV-quartus/microop_no_en.hex
 #endianess swap
 	hexdump -v -e '1/4 "%08x"' -e '"\n"' $(BUILD_DIR)/system.bin | xxd -r -p > $(BUILD_DIR)/system_le.bin
 	srec_cat $(BUILD_DIR)/system_le.bin -Binary -o KISCV-quartus/system.mif -MIF 32
