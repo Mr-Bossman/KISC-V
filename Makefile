@@ -9,9 +9,9 @@ CPPFLAGS = -DVPREFIX=$(PREFIX_NAME) -O3
 VFLAGS =
 TARGET_CFLAGS = -march=rv32izicsr -mabi=ilp32 -O2 -Wall -Wextra -Wno-array-bounds -Wno-unused-function -Wno-unused-parameter
 TARGET_LDFLAGS = --gc-sections
-TARGET_C_SOURCES = src/system.c
+TARGET_C_SOURCES = src/system.c src/simple_lib.c
 TARGET_S_SOURCES = src/example_start.S src/system_start.S
-TARGET_C_INCLUDES =
+TARGET_C_INCLUDES = src/simple_lib.h
 CPP_SOURCES = src/test.cpp
 V_SOURCES = hdl/sram.v hdl/apb_align.v hdl/cpu.v hdl/alu.v hdl/APB.v hdl/uart.v hdl/intctrl.v hdl/timer.v
 VERILATOR_TOP_FILE = hdl/soc_top.v
@@ -21,6 +21,7 @@ INCV_SOURCES =
 INCLUDES = $(addprefix --include $(PREFIX_NAME)_,$(notdir $(INCV_SOURCES:.v=.h))) -include $(PREFIX_NAME).h -include $(PREFIX_NAME)___024root.h
 CPPFLAGS += $(INCLUDES)
 
+TARGET_CFLAGS += $(addprefix -I, $(sort $(dir $(TARGET_C_INCLUDES))))
 TARGET_OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(TARGET_C_SOURCES:.c=.o)))
 TARGET_OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(TARGET_S_SOURCES:.S=.o)))
 TARGET_DEP = $(TARGET_OBJECTS:%.o=%.d)
