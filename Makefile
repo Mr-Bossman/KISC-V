@@ -20,7 +20,7 @@ PATH := $(PATH):$(shell pwd)/riscv/bin
 all: $(PREFIX_NAME) system
 
 $(PREFIX_NAME): $(V_SOURCES) $(CPP_SOURCES)
-	verilator $(VFLAGS) -Wall --Mdir $(BUILD_DIR) -Ihdl -DSYSTEM_VERILOG_2012 -cc $(V_SOURCES) -prefix $(PREFIX_NAME) -CFLAGS "$(CPPFLAGS)" $(CPP_SOURCES) --exe --top-module soc_top
+	verilator $(VFLAGS) -Wall --Mdir $(BUILD_DIR) -Ihdl -DSYSTEM_VERILOG_2012_VERILATOR -cc $(V_SOURCES) -prefix $(PREFIX_NAME) -CFLAGS "$(CPPFLAGS)" $(CPP_SOURCES) --exe --top-module soc_top
 	$(MAKE) -C $(BUILD_DIR) -f $(PREFIX_NAME).mk $(PREFIX_NAME)
 	cp $(BUILD_DIR)/$(PREFIX_NAME) .
 
