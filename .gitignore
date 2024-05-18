@@ -11,6 +11,7 @@ KISCV-quartus/*.swp
 KISCV-quartus/*~
 KISCV-quartus/c5_pin_model_dump.txt
 KISCV-quartus/microop.hex
+KISCV-quartus/microop_no_en.hex
 KISCV-quartus/system.mif
 KISCV-quartus/db
 KISCV-quartus/incremental_db
