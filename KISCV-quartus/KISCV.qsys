@@ -150,6 +150,14 @@
          type = "int";
       }
    }
+   element sdram_0.inport
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+   }
 }
 ]]></parameter>
  <parameter name="clockCrossingAdapter" value="HANDSHAKE" />
@@ -348,7 +356,7 @@
   <parameter name="gui_number_of_clocks" value="2" />
   <parameter name="gui_operation_mode" value="direct" />
   <parameter name="gui_output_clock_frequency0" value="14.7456" />
-  <parameter name="gui_output_clock_frequency1" value="50.0" />
+  <parameter name="gui_output_clock_frequency1" value="20.0" />
   <parameter name="gui_output_clock_frequency10" value="100.0" />
   <parameter name="gui_output_clock_frequency11" value="100.0" />
   <parameter name="gui_output_clock_frequency12" value="100.0" />
