@@ -46,7 +46,7 @@ module cpu
 	reg[3:0] op_jmp;
 	reg [15:0] microop_prog[0:127];
 	reg [15:0] microop;
-	wire [6:0] microop_pc = microop[15:9];
+	wire [6:0] microop_pc = microop[14:8];
 	reg [6:0] microop_addr;
 integer b;
 initial begin
