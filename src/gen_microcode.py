@@ -72,7 +72,7 @@ def gen_opcodes(index, microcode,loadins):
 		else:
 			#top 4 bits are the opcode index next 4 bits are the microcode index
 			#last 8 bits are the microcode
-			code = microcode[i] | (((i+ofs)*0x200) + (index*0x2000))
+			code = microcode[i] | (((i+ofs)*0x100) + (index*0x1000))
 			# end jump to start
 			if(i == len(microcode)-1):
 				jmp_to_nop = 0 if index == 0 else 0xff00
