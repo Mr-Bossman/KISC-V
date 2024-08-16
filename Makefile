@@ -1,5 +1,6 @@
 BUILD_DIR = build
 PREFIX_NAME = RV32emu
+QUARTUS_ROOTDIR = /opt/quartus-lite/quartus/
 TARGET_CC = $(CROSS_COMPILE)gcc
 CC = gcc
 TARGET_LD = $(CROSS_COMPILE)ld
@@ -38,9 +39,29 @@ PATH := $(PATH):$(shell pwd)/riscv/bin
 
 .PHONY: clean all run run_tests tests icarus verilator system example linux quartus clean_exe clean_mem microcode example_system bootloader
 
-all: $(TARGET_OBJECTS) $(PREFIX_NAME) system tests microcode
+all: $(PREFIX_NAME) system tests microcode
 
-$(PREFIX_NAME): $(V_SOURCES) $(CPP_SOURCES)
+help:
+	@echo "make: make all"
+	@echo "make all: build verilator, system.mem, tests and microcode"
+	@echo "make run: make all and run the emulator"
+	@echo "make icarus: build the emulator with iverilog"
+	@echo "make run_tests: run the emulator with tests"
+	@echo "make tests: build riscv-tests"
+	@echo "make system: build system.mem, for emulating CSRs and bootloading system "
+	@echo "make example: build \"hello world\" example"
+	@echo "make example_system: build \"hello world\" example, but at address 0"
+	@echo "make linux: build linux memory image"
+	@echo "make microcode: build microcode"
+	@echo "make bootloader: build serial bootloader for FPGA"
+	@echo "make transfer: build serial transfer tool"
+	@echo "make qemu: run linux in qemu"
+	@echo "make quartus: build the quartus project"
+	@echo "make clean: clean the build directory"
+	@echo "make clean_exe: clean the emulator"
+	@echo "make clean_mem: clean the memory images"
+
+$(PREFIX_NAME): $(V_SOURCES) $(CPP_SOURCES) | $(BUILD_DIR)
 	verilator $(VFLAGS) -Wall --Mdir $(BUILD_DIR) -Ihdl -DSYSTEM_VERILOG_2012_VERILATOR -cc $(V_SOURCES) $(VERILATOR_TOP_FILE) -prefix $(PREFIX_NAME) -CFLAGS "$(CPPFLAGS)" $(CPP_SOURCES) --exe --top-module $(VERILATOR_TOP)
 	$(MAKE) -C $(BUILD_DIR) -f $(PREFIX_NAME).mk $(PREFIX_NAME)
 	cp $(BUILD_DIR)/$(PREFIX_NAME) .
@@ -54,7 +75,15 @@ run: all
 run_tests: all tests
 	./$(PREFIX_NAME)
 
-%.mem: %.bin
+riscv:
+	./dl_toolchain.sh
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(TARGET_OBJECTS): | $(BUILD_DIR) riscv
+
+%.mem: %.bin | riscv
 	$(TARGET_OBJCOPY) -Ibinary -O verilog --verilog-data-width=4 --reverse-bytes=4 $< $@
 	sed -i s/@.*//g $@
 
@@ -81,7 +110,7 @@ $(BUILD_DIR)/system.bin: system.lds system.o system_start.o simple_lib.o
 	$(TARGET_OBJCOPY) -Obinary $(basename $@).elf $@
 	truncate -s 65536 $@
 
-$(BUILD_DIR)/linux.bin: all linux/test.dts linux/vmlinux
+$(BUILD_DIR)/linux.bin: linux/test.dts linux/vmlinux | $(BUILD_DIR) riscv
 	dtc -I dts -O dtb -o $(BUILD_DIR)/test.dtb linux/test.dts
 	$(TARGET_OBJCOPY) -Obinary linux/vmlinux $@
 	truncate -s 2048 $(BUILD_DIR)/test.dtb # 0x800 round up to multiple of 4
@@ -96,44 +125,57 @@ microop_no_en.hex: src/gen_microcode.py
 
 microcode: microop.hex microop_no_en.hex
 
-test.mem:
-	$(MAKE) -C tests CROSS_COMPILE=$(CROSS_COMPILE)
+tests: | $(BUILD_DIR) riscv
+	@$(MAKE) -C tests CROSS_COMPILE=$(CROSS_COMPILE) --no-print-directory
+	cp $(BUILD_DIR)/test.mem test.mem
 
-system: system.mem
-
-bootloader: transfer
-	rm $(BUILD_DIR)/system.bin || true
+bootloader: transfer | $(BUILD_DIR)
+	rm -f $(BUILD_DIR)/system.bin
 	@$(MAKE) system BOOTLOADER=1 --no-print-directory
 
+example_:
+	rm -f $(BUILD_DIR)/example.bin
+	@$(MAKE) $(BUILD_DIR)/example.mem TEXT_START=$(TEXT_START) --no-print-directory
+
 example: TEXT_START:=0x80000000
-example: example.mem
-	cp example.mem test.mem
+example: example_ $(BUILD_DIR)/example.mem
+	cp $(BUILD_DIR)/example.mem test.mem
 
 example_system: TEXT_START:=0x0
-example_system: clean_mem example.mem
-	cp example.mem system.mem
+example_system: example_
+	cp $(BUILD_DIR)/example.mem system.mem
 
-linux: linux.mem
-	cp linux.mem test.mem
+system: $(BUILD_DIR)/system.mem
+	cp $(BUILD_DIR)/system.mem system.mem
 
-tests: test.mem
+linux: $(BUILD_DIR)/linux.mem
+	cp $(BUILD_DIR)/linux.mem test.mem
 
-quartus: bootloader opencores/opencores.zip microcode
+qemu: linux
+	qemu-system-riscv32 -nographic -M virt -bios none -cpu rv32,mmu=off -kernel $(BUILD_DIR)/linux.bin -dtb $(BUILD_DIR)/test.dtb
+
+quartus: bootloader opencores/opencores.zip microcode | $(BUILD_DIR)
+	rm -rf KISCV.sof
 	unzip -n opencores/opencores.zip -d opencores/
 	cp microop.hex KISCV-quartus/microop.hex
 	cp microop_no_en.hex KISCV-quartus/microop_no_en.hex
 #endianess swap
 	hexdump -v -e '1/4 "%08x"' -e '"\n"' $(BUILD_DIR)/system.bin | xxd -r -p > $(BUILD_DIR)/system_le.bin
 	srec_cat $(BUILD_DIR)/system_le.bin -Binary -o KISCV-quartus/system.mif -MIF 32
+	cd KISCV-quartus && $(QUARTUS_ROOTDIR)/bin/quartus_sh --flow compile KISCV
+	cp KISCV-quartus/output_files/KISCV.sof .
 
 transfer: src/transfer.cpp
 	$(CXX) -o transfer src/transfer.cpp
 
 clean_exe:
-	rm -rf $(PREFIX_NAME) *.mem || true
+	rm -rf KISCV.sof $(PREFIX_NAME) *.mem
 
 clean_mem:
-	rm -rf *.mem || true
+	rm -rf *.mem
+
+clean_toolchain:
+	rm -rf riscv
 
 clean:
-	rm -rf $(PREFIX_NAME) $(BUILD_DIR)/* *.mem || true
+	rm -rf KISCV.sof $(PREFIX_NAME) $(BUILD_DIR)/* *.mem
