@@ -18,11 +18,7 @@ make CROSS_COMPILE=riscv32-unknown-elf- testkern
 ## To run on the [TerasIC DE0-CV Board](https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=163&No=921)
 ```bash
 git submodule update --init --recursive
-make CROSS_COMPILE=riscv32-unknown-elf- quartus
-```
-Then flash `KISCV.sof` to the board.
-
-```bash
+make CROSS_COMPILE=riscv32-unknown-elf- flash
 screen /dev/ttyUSBX 460800
 ```
 

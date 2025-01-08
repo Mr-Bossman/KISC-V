@@ -1,6 +1,6 @@
 BUILD_DIR = build
 PREFIX_NAME = RV32emu
-QUARTUS_ROOTDIR = /opt/quartus-lite/quartus/
+QUARTUS_ROOTDIR = /opt/quartus-lite/quartus
 TARGET_CC = $(CROSS_COMPILE)gcc
 CC = gcc
 TARGET_LD = $(CROSS_COMPILE)ld
@@ -57,6 +57,7 @@ help:
 	@echo "make transfer: build serial transfer tool"
 	@echo "make qemu: run linux in qemu"
 	@echo "make quartus: build the quartus project"
+	@echo "make flash: flash the built quartus project"
 	@echo "make clean: clean the build directory"
 	@echo "make clean_exe: clean the emulator"
 	@echo "make clean_mem: clean the memory images"
@@ -154,7 +155,7 @@ linux: $(BUILD_DIR)/linux.mem
 qemu: linux
 	qemu-system-riscv32 -nographic -M virt -bios none -cpu rv32,mmu=off -kernel $(BUILD_DIR)/linux.bin -dtb $(BUILD_DIR)/test.dtb
 
-quartus: bootloader opencores/opencores.zip microcode | $(BUILD_DIR)
+KISCV.sof: bootloader opencores/opencores.zip microcode | $(BUILD_DIR)
 	rm -rf KISCV.sof
 	unzip -n opencores/opencores.zip -d opencores/
 	cp microop.hex KISCV-quartus/microop.hex
@@ -164,6 +165,11 @@ quartus: bootloader opencores/opencores.zip microcode | $(BUILD_DIR)
 	srec_cat $(BUILD_DIR)/system_le.bin -Binary -o KISCV-quartus/system.mif -MIF 32
 	cd KISCV-quartus && $(QUARTUS_ROOTDIR)/bin/quartus_sh --flow compile KISCV
 	cp KISCV-quartus/output_files/KISCV.sof .
+
+quartus: KISCV.sof
+
+flash: KISCV.sof
+	$(QUARTUS_ROOTDIR)/bin/quartus_pgm -m JTAG -o "p;KISCV.sof"
 
 transfer: src/transfer.cpp
 	$(CXX) -o transfer src/transfer.cpp
