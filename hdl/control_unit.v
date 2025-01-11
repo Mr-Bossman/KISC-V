@@ -26,7 +26,7 @@ module control_unit
 	output lui_flag,
 	output jal_flag,
 	output sys_load_pc,
-	output store_alu,
+	output alu_flag,
 	output load_branch,
 	output load_jalr,
 	output pwrite,
@@ -82,10 +82,9 @@ end
 /* flags start */
 	wire load_insr_microop = microop[2];
 	assign mem_access = microop[3];
-	wire alu_flags = microop[4];
+	assign alu_flag = microop[4];
 	wire load_pc_microop = microop[5];
 	assign sys_load = microop[6];
-	assign store_alu = microop[7];
 	assign microop_pc_zero = (microop_pc == 0);
 
 	wire sys_load_rdy = sys_load && APB_done;
@@ -99,17 +98,17 @@ end
 	assign load_insr = load_insr_rdy || (sys_load_rdy && !APB_pwrite);
 
 	assign sys_load_pc = sys_load_rdy && pwrite;
-	wire load_pc_microop_true = load_pc_microop && (alu_flags && cmp_flag || !alu_flags);
+	wire load_pc_microop_true = load_pc_microop && (alu_flag && cmp_flag || !alu_flag);
 	assign load_pc = (jal_flag && load_insr_microop && APB_Dready) || (microop_pc_zero || load_pc_microop_true || sys_load_pc);
 
-	assign load_jalr = load_pc_microop && !alu_flags;
-	assign load_branch =load_pc_microop && alu_flags && cmp_flag;
+	assign load_jalr = load_pc_microop && !alu_flag;
+	assign load_branch = load_pc_microop && alu_flag && cmp_flag;
 
 	// non-imm, branch
-	assign alu_rs1 = (!immediate && store_alu) || alu_flags;
+	assign alu_rs1 = !immediate && alu_flag;
 
 	// imm_i, load, jalr
-	assign alu_imm_i = (immediate && store_alu) || (!pwrite && mem_access) || load_jalr;
+	assign alu_imm_i = (immediate && alu_flag) || (!pwrite && mem_access) || load_jalr;
 	/* These happen in the same cycle as load_insr_microop */
 /*
 	wire lui_flag = (load_insr_microop)?microop_prog[op_jmp][9]:0;
@@ -136,9 +135,7 @@ end
 			/* `unique_sys is broken in verilator */
 			if(mem_access_rdy)
 				write_reg = 1;
-			else if(store_alu)
-				write_reg = 1;
-			else if(load_pc_microop && !alu_flags)
+			else if(load_pc_microop ^ alu_flag)
 				write_reg = 1;
 			else
 				write_reg = 0;

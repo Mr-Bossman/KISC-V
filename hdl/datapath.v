@@ -13,7 +13,7 @@ module datapath
 	input lui_flag,
 	input jal_flag,
 	input sys_load_pc,
-	input store_alu,
+	input alu_flag,
 	input load_branch,
 	input load_jalr,
 	input load_pc,
@@ -81,7 +81,7 @@ module datapath
 
 /* write_reg mux start */
 	`always_comb_sys begin
-		`unique_sys if (store_alu)
+		`unique_sys if (alu_flag)
 			write_reg_mux = alu_out;
 		else if (load_pc || jal_flag)
 			write_reg_mux = pc;
@@ -120,7 +120,7 @@ module datapath
 		`unique_sys if (mem_access)
 			alu_op = 4'b0000;
 		// imm_i and imm
-		else if ((sub_op == 5 && immediate) || (!immediate && store_alu))
+		else if ((sub_op == 5 && immediate) || (!immediate && alu_flag))
 			alu_op = {instruction[30],sub_op};
 		else
 			alu_op = {1'b0,sub_op};

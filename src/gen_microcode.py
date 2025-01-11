@@ -8,10 +8,9 @@ class Micro_ops(enum.IntEnum):
 	APB_WRITE	= 0x0002,
 	LOAD_ISR	= 0x0004,
 	MEM_ACCESS	= 0x0008,
-	ALU_FLAGS	= 0x0010,
+	ALU_FLAG	= 0x0010,
 	LOAD_PC		= 0x0020,
-	SYS_LOAD	= 0x0040,
-	ALU_STORE	= 0x0080,
+	SYS_LOAD	= 0x0040
 
 
 LOADINS = [Micro_ops.APB_PSEL,
@@ -53,13 +52,13 @@ SYSTEM_NO_EN = [Micro_ops.SYS_LOAD,
 		Micro_ops.APB_PSEL | Micro_ops.SYS_LOAD | Micro_ops.APB_WRITE,
 		Micro_ops.NOP]
 
-ALU = [Micro_ops.ALU_STORE,
+ALU = [Micro_ops.ALU_FLAG,
        Micro_ops.NOP]
 
 JALR = [Micro_ops.LOAD_PC,
 	Micro_ops.NOP]
 
-BRANCH = [Micro_ops.ALU_FLAGS | Micro_ops.LOAD_PC,
+BRANCH = [Micro_ops.ALU_FLAG | Micro_ops.LOAD_PC,
 	  Micro_ops.NOP]
 
 def print_err(*args, **kwargs):
