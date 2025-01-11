@@ -5,7 +5,7 @@ module cpu
 	(input APB_PCLK,
 	input APB_PRESETn,
 	output reg [ADDR_WIDTH-1:0] APB_paddr,
-	output reg [DATA_WIDTH-1:0] APB_pdata,
+	output [DATA_WIDTH-1:0] APB_pdata,
 	input [DATA_WIDTH-1:0] APB_prdata,
 	output APB_psel,
 	output APB_penable,
@@ -36,6 +36,7 @@ module cpu
 /* Regfile start*/
 	/* we can use the same bus for APB_pdata_val and write_reg_mux */
 	wire [31:0] write_reg_APB_pdata = (write_reg)?write_reg_mux:((load_pdata)?APB_pdata_val:32'bX);
+	assign APB_pdata = write_reg_APB_pdata;
 
 	wire [4:0]ra0;
 	wire [4:0]ra1;
@@ -200,7 +201,7 @@ programcounter pcounter(APB_PCLK, APB_PRESETn, halt, increment, load_pcounter, l
 			end
 
 			if(load_pdata) begin
-				APB_pdata <= write_reg_APB_pdata;
+				//APB_pdata <= write_reg_APB_pdata;
 				if (APB_pdata_val === 32'bX)
 					$display("APB_pdata_val is undefined");
 			end
